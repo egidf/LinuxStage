@@ -83,7 +83,7 @@ QWidget* makeChip(const QString& text, const QColor& color, bool active,
 
 MainWindow::MainWindow(SessionController* controller, QWidget* parent)
     : QMainWindow(parent), controller_(controller), engine_(&controller->engine()) {
-    setWindowTitle(tr("LSP Audio Player"));
+    setWindowTitle(tr("Linux Stage"));
     setWindowFlag(Qt::FramelessWindowHint);  // window buttons live in the chrome bar
     setMinimumSize(1180, 760);
     resize(1440, 900);
@@ -199,9 +199,9 @@ void MainWindow::buildChrome() {
 
     auto* titleCol = new QVBoxLayout();
     titleCol->setSpacing(0);
-    auto* title = new QLabel(tr("LSP Audio Player"), chrome_);
+    auto* title = new QLabel(tr("Linux Stage"), chrome_);
     title->setStyleSheet("font-size: 15px; font-weight: 700;");
-    auto* subtitle = new QLabel(tr("Advanced audio player with LSP plugins"), chrome_);
+    auto* subtitle = new QLabel(tr("Audio player for creative stage workflows"), chrome_);
     subtitle->setStyleSheet(
         QString("color: %1; font-size: 10px;").arg(theme::kTextDim.name()));
     titleCol->addWidget(title);

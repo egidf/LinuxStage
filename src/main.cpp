@@ -47,9 +47,9 @@ int runOfflineRender(lspa::AudioEngine& engine, lspa::SessionController& control
 int main(int argc, char** argv) {
     // High DPI painting is the default in Qt 6.
     QApplication app(argc, argv);
-    QApplication::setApplicationName("LSP Audio Player");
+    QApplication::setApplicationName("Linux Stage");
     QApplication::setApplicationVersion("0.1.0");
-    QApplication::setOrganizationName("lsp-audio-player");
+    QApplication::setOrganizationName("linux-stage");
 
     QCommandLineParser parser;
     parser.setApplicationDescription(

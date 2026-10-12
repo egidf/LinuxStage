@@ -78,3 +78,10 @@
 5	27	1791818002534472623	/home/egidf/Linux_Stage_Audio/build/lsp-audio-player_autogen/mocs_compilation.cpp	b736e88d5d51533e
 27	2938	1791818002557709389	CMakeFiles/lsp-audio-player.dir/src/ui/PlayerPanel.cpp.o	147844010e9bd019
 2938	3317	1791818005467523543	lsp-audio-player	64ea3dd2c2ef7251
+5	28	1791818219179168827	lsp-audio-player_autogen/timestamp	b736e88d5d51533e
+5	28	1791818219179168827	lsp-audio-player_autogen/mocs_compilation.cpp	b736e88d5d51533e
+5	28	1791818219179168827	/home/egidf/Linux_Stage_Audio/build/lsp-audio-player_autogen/timestamp	b736e88d5d51533e
+5	28	1791818219179168827	/home/egidf/Linux_Stage_Audio/build/lsp-audio-player_autogen/mocs_compilation.cpp	b736e88d5d51533e
+28	1474	1791818219203813304	CMakeFiles/lsp-audio-player.dir/src/main.cpp.o	372827a9ab55f075
+28	3853	1791818219204147987	CMakeFiles/lsp-audio-player.dir/src/ui/MainWindow.cpp.o	647457f27716b75
+3853	4254	1791818223027233447	lsp-audio-player	64ea3dd2c2ef7251
