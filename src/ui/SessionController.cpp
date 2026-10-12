@@ -228,6 +228,10 @@ void SessionController::clearPlaylist(PlayerId id) {
 void SessionController::selectTrack(PlayerId id, int index) {
     configFor(id).playlistIndex = index;
     engine_->player(id).playIndex(index);
+    // FR: Main player play -> BGM = Mute
+    if (id == PlayerId::Main) {
+        engine_->player(PlayerId::Bgm).setMuted(true);
+    }
 }
 
 PlayerConfig& SessionController::configFor(RackTarget target) {

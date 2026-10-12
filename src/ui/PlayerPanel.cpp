@@ -448,8 +448,19 @@ void PlayerPanel::buildUi() {
     connect(playBtn_, &QPushButton::clicked, this, [this] {
         Player& p = engine_->player(id_);
         const PlayerSnapshot snap = p.snapshot();
-        if (snap.state == PlayerState::Playing) p.pause();
-        else p.play();
+        if (snap.state == PlayerState::Playing) {
+            p.pause();
+            // Main player pause -> unmute BGM
+            if (id_ == PlayerId::Main) {
+                engine_->player(PlayerId::Bgm).setMuted(false);
+            }
+        } else {
+            p.play();
+            // Main player play -> mute BGM
+            if (id_ == PlayerId::Main) {
+                engine_->player(PlayerId::Bgm).setMuted(true);
+            }
+        }
         refreshNow();
     });
 
