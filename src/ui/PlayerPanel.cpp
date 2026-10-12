@@ -459,6 +459,12 @@ void PlayerPanel::buildUi() {
             // Main player play -> mute BGM
             if (id_ == PlayerId::Main) {
                 engine_->player(PlayerId::Bgm).setMuted(true);
+            } else if (id_ == PlayerId::Bgm) {
+                // BGM play attempt while Main is playing -> mute BGM
+                const auto mainSnap = engine_->player(PlayerId::Main).snapshot();
+                if (mainSnap.state == PlayerState::Playing) {
+                    engine_->player(PlayerId::Bgm).setMuted(true);
+                }
             }
         }
         refreshNow();
