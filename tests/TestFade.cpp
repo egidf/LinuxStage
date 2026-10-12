@@ -161,6 +161,23 @@ TEST_CASE(PauseResumeKeepsPosition) {
     CHECK(p.snapshot().positionFrames >= pausedAt);
 }
 
+TEST_CASE(PlayerFadeSettingsAreIndependent) {
+    Player main("Main", 48000, 256);
+    Player bgm("BGM", 48000, 256);
+    FadeConfig mainFade;
+    mainFade.fadeInMs = 120.0;
+    mainFade.fadeOutMs = 800.0;
+    FadeConfig bgmFade;
+    bgmFade.fadeInMs = 2400.0;
+    bgmFade.fadeOutMs = 300.0;
+    main.setFadeConfig(mainFade);
+    bgm.setFadeConfig(bgmFade);
+    CHECK_NEAR(main.fadeConfig().fadeInMs, 120.0, 1.0e-9);
+    CHECK_NEAR(main.fadeConfig().fadeOutMs, 800.0, 1.0e-9);
+    CHECK_NEAR(bgm.fadeConfig().fadeInMs, 2400.0, 1.0e-9);
+    CHECK_NEAR(bgm.fadeConfig().fadeOutMs, 300.0, 1.0e-9);
+}
+
 TEST_CASE(SeekJumpsWithoutDrift) {
     const std::string path = writeToneWav("seek", 5.0, 100.0, 48000);
     CHECK(!path.empty());

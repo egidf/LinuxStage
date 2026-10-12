@@ -33,9 +33,9 @@ RackView::RackView(SessionController* controller, QWidget* parent)
     buildUi();
     reload();
 
-    connect(controller_, &SessionController::rackChanged, this,
+    connect(controller_, &SessionController::rackAboutToChange, this,
             [this](RackTarget target) {
-                if (target == target_) reload();
+                if (target == target_) closeNativeEditors();
             });
 }
 
@@ -129,23 +129,21 @@ void RackView::buildUi() {
     scroll_ = new QScrollArea(this);
     scroll_->setWidgetResizable(true);
     scroll_->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    scroll_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll_->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     scroll_->setFrameShape(QFrame::NoFrame);
     scroll_->setStyleSheet("QScrollArea { background: transparent; }");
 
     flow_ = new QWidget(scroll_);
     flow_->setAttribute(Qt::WA_StyledBackground, true);
-    flow_->installEventFilter(this);
     flowLayout_ = new QHBoxLayout(flow_);
-    flowLayout_->setContentsMargins(0, 0, 0, 4);
+    flowLayout_->setContentsMargins(0, 0, 8, 0);
     flowLayout_->setSpacing(10);
-    flowLayout_->addStretch(1);
     scroll_->setWidget(flow_);
     root->addWidget(scroll_, 1);
 
     auto* hint = new QLabel(
-        tr("The rack order is the signal order: audio flows left to right. "
-           "Use a card's menu to reorder, edit or remove it."),
+          tr("The rack order is the signal order: audio flows from left to right. "
+              "Use a card's menu to reorder or remove it."),
         this);
     hint->setStyleSheet(
         QString("color: %1; font-size: 11px;").arg(theme::kTextFaint.name()));
@@ -154,6 +152,7 @@ void RackView::buildUi() {
 
 void RackView::setTarget(RackTarget target) {
     if (target_ == target) return;
+    closeNativeEditors();
     target_ = target;
     targetCombo_->setCurrentIndex(target == RackTarget::MainPlayer ? 0 : 1);
     reload();
@@ -168,7 +167,13 @@ void RackView::reload() {
     rebuildCards();
 }
 
+void RackView::closeNativeEditors() {
+    const auto cards = flow_->findChildren<RackCard*>(QString(), Qt::FindDirectChildrenOnly);
+    for (RackCard* card : cards) card->closeNativeEditor();
+}
+
 void RackView::rebuildCards() {
+    closeNativeEditors();
     // Remove old cards and arrows entirely; the trailing "Add Plugin" card
     // is recreated at the end below (keeping stale items across rebuilds had
     // accumulated duplicates at both ends).
@@ -179,27 +184,11 @@ void RackView::rebuildCards() {
             delete item;
         }
     }
-    arrowCards_.clear();
-
     const QVector<RackSlotInfo> info = controller_->rackInfo(target_);
     const QColor color = accent();
     int number = 1;
-    QLabel* pendingArrow = nullptr;
 
     for (const RackSlotInfo& slot : info) {
-        if (number > 1) {
-            auto* arrow = new QLabel(this);
-            arrow->setPixmap(icons::pixmap(icons::Icon::ArrowRight, theme::kTextFaint, 20));
-            arrow->setFixedWidth(20);
-            // AlignTop (not AlignVCenter): flow_ stretches to the full
-            // viewport height on the Rack tab, which would drag a VCentered
-            // arrow to mid-panel. Height is synced to the following card in
-            // syncArrowHeights() so the pixmap sits at the card's center.
-            arrow->setAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-            flowLayout_->addWidget(arrow, 0, Qt::AlignTop);
-            pendingArrow = arrow;
-        }
-
         // Card header: short category as the title (like the mockup's
         // "1. EQ"), the full plugin name as the subtitle.
         QString title = slot.category;
@@ -236,6 +225,9 @@ void RackView::rebuildCards() {
             }
         }
         card->setParameters(params);
+        if (slot.status == PluginLoadStatus::Loaded) {
+            card->openNativeEditor(controller_->engine().slotInstance(target_, slot.uid));
+        }
 
         const QString uid = QString::fromStdString(slot.uid);
         connect(card, &RackCard::toggled, controller_,
@@ -250,14 +242,7 @@ void RackView::rebuildCards() {
                 [this](const QString& uid) { controller_->movePlugin(target_, uid, -1); });
         connect(card, &RackCard::moveDownRequested, controller_,
                 [this](const QString& uid) { controller_->movePlugin(target_, uid, +1); });
-        connect(card, &RackCard::editRequested, this,
-                [this](const QString& uid) { emit editPluginRequested(target_, uid); });
-
-        flowLayout_->addWidget(card, 0, Qt::AlignTop);
-        if (pendingArrow) {
-            arrowCards_.append(qMakePair(pendingArrow, static_cast<QWidget*>(card)));
-            pendingArrow = nullptr;
-        }
+        flowLayout_->addWidget(card);
         ++number;
     }
 
@@ -272,11 +257,8 @@ void RackView::rebuildCards() {
             setCursor(Qt::PointingHandCursor);
             setToolTip(tr("Add a plugin to this rack"));
             setFocusPolicy(Qt::StrongFocus);
-            setFixedWidth(150);
-            // Match the plugin cards' height (the flow stretches cards to the
-            // viewport; AlignTop keeps this pinned to the top).
-            setMinimumHeight(300);
-            setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+            setMinimumHeight(74);
+            setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
             auto* lay = new QVBoxLayout(this);
             lay->addStretch(1);
@@ -348,28 +330,7 @@ void RackView::rebuildCards() {
     };
 
     auto* addCard = new AddCard(color, [this] { emit addPluginRequested(); }, this);
-    flowLayout_->addWidget(addCard, 0, Qt::AlignTop);
-
-    // Match each arrow's height to its card once layout has run, so the
-    // pixmap lands at the card's vertical center regardless of viewport.
-    QTimer::singleShot(0, this, &RackView::syncArrowHeights);
-}
-
-void RackView::syncArrowHeights() {
-    for (const auto& [arrow, card] : arrowCards_) {
-        if (!arrow || !card) continue;
-        arrow->setFixedHeight(card->height() > 0 ? card->height() : card->sizeHint().height());
-    }
-}
-
-bool RackView::eventFilter(QObject* watched, QEvent* event) {
-    // Card heights follow the viewport (Rack tab is much taller than the
-    // Player tab), so re-sync the arrows whenever the flow is re-laid out.
-    if (watched == flow_ && (event->type() == QEvent::Resize ||
-                             event->type() == QEvent::LayoutRequest)) {
-        QTimer::singleShot(0, this, &RackView::syncArrowHeights);
-    }
-    return QWidget::eventFilter(watched, event);
+    flowLayout_->addWidget(addCard);
 }
 
 void RackView::onSavePreset() {

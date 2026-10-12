@@ -20,6 +20,7 @@ public:
     void setDigits(int digits) { digits_ = digits; update(); }
     void setUnit(const QString& unit) { unit_ = unit; update(); }
     void setLabel(const QString& label) { label_ = label; update(); }
+    void setDiameter(int diameter);
     void setBipolar(bool bipolar) { bipolar_ = bipolar; update(); }
     void setKnobColor(const QColor& color);
 
@@ -59,6 +60,7 @@ private:
     QString unit_;
     QString label_;
     QColor color_;
+    int diameter_ = 44;
 };
 
 }  // namespace lspa

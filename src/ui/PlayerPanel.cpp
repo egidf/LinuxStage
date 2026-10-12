@@ -5,14 +5,17 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QListWidget>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QPointer>
 #include <QProgressBar>
 #include <QPushButton>
+#include <QSignalBlocker>
 #include <QSlider>
 #include <QTimer>
 #include <QToolButton>
@@ -20,6 +23,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <thread>
 
 #include "core/Logger.h"
@@ -69,22 +73,28 @@ private:
 class PlaylistRow : public QWidget {
 public:
     PlaylistRow(int index, const QString& title, const QString& duration, bool current,
-                bool missing, const QColor& hiColor, const QColor& accent, QWidget* parent = nullptr)
-        : QWidget(parent), index_(index), current_(current), hi_(hiColor), accent_(accent) {
+                                bool missing, const QColor& hiColor, const QColor& accent,
+                                std::function<void()> activate, QWidget* parent = nullptr)
+                : QWidget(parent), index_(index), current_(current), hi_(hiColor), accent_(accent),
+                    activate_(std::move(activate)) {
+                setCursor(Qt::PointingHandCursor);
         auto* lay = new QHBoxLayout(this);
         lay->setContentsMargins(14, 0, 12, 0);
         lay->setSpacing(10);
 
         marker_ = new QLabel(this);
+        marker_->setAttribute(Qt::WA_TransparentForMouseEvents);
         marker_->setFixedWidth(20);
         marker_->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 
         name_ = new QLabel(title, this);
+        name_->setAttribute(Qt::WA_TransparentForMouseEvents);
         name_->setStyleSheet(
             QString("color: %1; background: transparent; font-size: 15px;")
                 .arg((current ? QColor(255, 255, 255) : theme::kText).name()));
 
         dur_ = new QLabel(duration, this);
+        dur_->setAttribute(Qt::WA_TransparentForMouseEvents);
         dur_->setStyleSheet(
             QString("color: %1; background: transparent; font-size: 14px;")
                 .arg((current ? QColor(255, 255, 255) : theme::kText).name()));
@@ -102,6 +112,7 @@ public:
         lay->addWidget(name_, 1);
         if (missing) {
             auto* warn = new QLabel(QString::fromUtf8("\xe2\x9a\xa0"), this);
+            warn->setAttribute(Qt::WA_TransparentForMouseEvents);
             warn->setToolTip(tr("File is missing or unreadable"));
             warn->setStyleSheet(
                 QString("color: %1; background: transparent;").arg(theme::kWarn.name()));
@@ -112,6 +123,26 @@ public:
 
     QSize sizeHint() const override { return QSize(QWidget::sizeHint().width(), 34); }
 
+protected:
+    void mouseReleaseEvent(QMouseEvent* event) override {
+        if (event->button() == Qt::LeftButton && rect().contains(event->position().toPoint())) {
+            if (activate_) activate_();
+            event->accept();
+            return;
+        }
+        QWidget::mouseReleaseEvent(event);
+    }
+
+    void keyPressEvent(QKeyEvent* event) override {
+        if (event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+            if (activate_) activate_();
+            event->accept();
+            return;
+        }
+        QWidget::keyPressEvent(event);
+    }
+
+public:
     void setCurrentStyle(bool current, const QColor& accent, const QColor& hi) {
         if (current == current_) return;
         current_ = current;
@@ -154,6 +185,7 @@ private:
     bool current_ = false;
     QColor hi_;
     QColor accent_;
+    std::function<void()> activate_;
 };
 
 }  // namespace
@@ -175,6 +207,11 @@ PlayerPanel::PlayerPanel(PlayerId id, AudioEngine* engine, SessionController* co
     timer->start();
 
     refreshPlaylist();
+}
+
+PlayerPanel::~PlayerPanel() {
+    ++peaksJobId_;
+    if (normalizeWorker_.joinable()) normalizeWorker_.join();
 }
 
 void PlayerPanel::buildUi() {
@@ -216,31 +253,47 @@ void PlayerPanel::buildUi() {
     header->addWidget(statusLabel_);
     header->addStretch(1);
 
-    // Output pill (mockup): one bordered dropdown = speaker icon + label + chevron.
-    outputCombo_ = new QComboBox(this);
-    outputCombo_->addItem(QIcon(icons::material("volume_up", QColor(238, 243, 248), 16)),
-                          isMain ? tr("Output: Main Bus") : tr("Output: BGM Bus"));
-    outputCombo_->setFixedHeight(28);
-    outputCombo_->view()->setIconSize(QSize(15, 15));
-    // Only one bus exists per player in this version, so the combo can stay
-    // enabled (it renders the mockup's bordered dropdown) without allowing
-    // any real routing change.
-    outputCombo_->setToolTip(tr("Audio routing is fixed to the %1 in this version.")
-                                 .arg(isMain ? tr("Main Bus") : tr("BGM Bus")));
-    outputCombo_->setStyleSheet(
-        QStringLiteral(
-            "QComboBox { background-color: #0F1925; border: 1px solid #223040;"
-            " border-radius: 8px; padding: 5px 30px 5px 11px; color: #E6EDF3;"
-            " font-size: 14px; }"
-            "QComboBox:hover { border-color: #3A4B60; }"
-            "QComboBox::drop-down { subcontrol-origin: padding;"
-            " subcontrol-position: right center; width: 28px; border: none; }"
-            "QComboBox::down-arrow { image: url(:/material/expand_more_g.svg);"
-            " width: 16px; height: 16px; }"
-            "QComboBox QAbstractItemView { background-color: #0F1925;"
-            " border: 1px solid #223040; color: #E6EDF3; selection-background-color: #0067BB;"
-            " selection-color: #FFFFFF; outline: none; }"));
-    header->addWidget(outputCombo_);
+    auto* fadeControls = new QWidget(this);
+    auto* fadeLayout = new QVBoxLayout(fadeControls);
+    fadeLayout->setContentsMargins(0, 0, 0, 0);
+    fadeLayout->setSpacing(2);
+    auto makeFadeRow = [&](const QString& name, QLabel*& valueLabel, bool fadeIn) {
+        auto* row = new QHBoxLayout();
+        row->setContentsMargins(0, 0, 0, 0);
+        row->setSpacing(4);
+        auto* nameLabel = new QLabel(name, fadeControls);
+        nameLabel->setStyleSheet(QString("color: %1; font-size: 9px;").arg(theme::kTextDim.name()));
+        nameLabel->setFixedWidth(48);
+        row->addWidget(nameLabel);
+        auto makeStep = [&](const QString& text, double delta) {
+            auto* button = new QToolButton(fadeControls);
+            button->setText(text);
+            button->setFixedSize(19, 18);
+            button->setToolTip(fadeIn ? tr("Adjust fade-in") : tr("Adjust fade-out"));
+            button->setStyleSheet(
+                QString("QToolButton { background: #161E2C; color: %1; border: 1px solid #303A48;"
+                        " border-radius: 4px; padding: 0; font-size: 12px; }"
+                        "QToolButton:hover { border-color: %2; }")
+                    .arg(theme::kText.name(), accent_.name()));
+            connect(button, &QToolButton::clicked, this,
+                    [this, fadeIn, delta] { adjustFade(fadeIn, delta); });
+            row->addWidget(button);
+        };
+        makeStep(QStringLiteral("-"), -100.0);
+        valueLabel = new QLabel(fadeControls);
+        valueLabel->setAlignment(Qt::AlignCenter);
+        valueLabel->setFixedWidth(42);
+        valueLabel->setStyleSheet(QString("color: %1; font-size: 9px;")
+                                      .arg(theme::kText.name()));
+        row->addWidget(valueLabel);
+        makeStep(QStringLiteral("+"), 100.0);
+        fadeLayout->addLayout(row);
+    };
+    makeFadeRow(tr("Fade in"), fadeInValue_, true);
+    makeFadeRow(tr("Fade out"), fadeOutValue_, false);
+    fadeControls->setToolTip(tr("Fade times for this player"));
+    header->addWidget(fadeControls);
+    refreshFadeControls();
     root->addLayout(header);
 
     // ------------------------------------------------------------------ body
@@ -374,9 +427,13 @@ void PlayerPanel::buildUi() {
     const QColor toolDim(151, 162, 176);       // shuffle/repeat (mockup dimmer)
     const QColor toolBright(230, 237, 243);    // prev/next (mockup near-white)
     shuffleBtn_ = makeTool("shuffle", toolDim, tr("Shuffle"), 18, 28);
+    shuffleBtn_->setCheckable(true);
     prevBtn_ = makeTool("skip_previous", toolBright, tr("Previous track"), 22, 32);
     nextBtn_ = makeTool("skip_next", toolBright, tr("Next track"), 22, 32);
     repeatBtn_ = makeTool("repeat", toolDim, tr("Repeat"), 18, 28);
+    repeatBtn_->setCheckable(true);
+    shuffleBtn_->setChecked(engine_->player(id_).shuffleEnabled());
+    repeatBtn_->setChecked(engine_->player(id_).repeatEnabled());
 
     playBtn_ = new QPushButton(this);
     playBtn_->setFixedSize(54, 54);
@@ -426,7 +483,7 @@ void PlayerPanel::buildUi() {
 
     volumeSlider_ = new QSlider(Qt::Horizontal, this);
     volumeSlider_->setRange(0, 200);
-    volumeSlider_->setValue(100);
+    volumeSlider_->setValue(qRound(engine_->player(id_).volume() * 100.0f));
     // The default slider sizeHint is ~40px tall, which would inflate the
     // volume row; pin it to the mute button's height so the row stays 26px.
     volumeSlider_->setFixedHeight(22);
@@ -451,12 +508,16 @@ void PlayerPanel::buildUi() {
         refreshNow();
     });
     connect(shuffleBtn_, &QToolButton::toggled, this, [this](bool on) {
+        engine_->player(id_).setShuffleEnabled(on);
         shuffleBtn_->setIcon(QIcon(icons::material(
             "shuffle", on ? accent_ : QColor(151, 162, 176), 22)));
+        shuffleBtn_->setToolTip(on ? tr("Shuffle on") : tr("Shuffle off"));
     });
     connect(repeatBtn_, &QToolButton::toggled, this, [this](bool on) {
+        engine_->player(id_).setRepeatEnabled(on);
         repeatBtn_->setIcon(QIcon(icons::material(
             "repeat", on ? accent_ : QColor(151, 162, 176), 22)));
+        repeatBtn_->setToolTip(on ? tr("Repeat playlist on") : tr("Repeat playlist off"));
     });
 
     // right column: playlist
@@ -485,8 +546,6 @@ void PlayerPanel::buildUi() {
                        " padding: 0px; margin: 0px; }"
                        "QListWidget::item:selected { background: transparent;"
                        " border: none; color: inherit; }"));
-    connect(playlist_, &QListWidget::itemDoubleClicked, this,
-            &PlayerPanel::onPlaylistActivated);
     connect(playlist_, &QListWidget::customContextMenuRequested, this,
             [this](const QPoint& pos) {
                 QMenu menu(this);
@@ -578,12 +637,172 @@ void PlayerPanel::onVolumeChanged(int value) {
 }
 
 void PlayerPanel::onMuteToggled() {
+    if (id_ == PlayerId::Bgm) return;
     Player& p = engine_->player(id_);
     const bool muted = !p.muted();
     p.setMuted(muted);
     muteBtn_->setIcon(QIcon(icons::material(muted ? "volume_off" : "volume_up",
                                              muted ? accent_ : QColor(230, 237, 243), 20)));
     muteBtn_->setToolTip(muted ? tr("Unmute") : tr("Mute"));
+}
+
+void PlayerPanel::updateVolumeControls() {
+    const Player& player = engine_->player(id_);
+    const bool muted = player.muted();
+    const int sliderValue = qRound(player.volume() * 100.0f);
+    if (volumeSlider_->value() != sliderValue) {
+        const QSignalBlocker blocker(volumeSlider_);
+        volumeSlider_->setValue(sliderValue);
+    }
+    muteBtn_->setIcon(QIcon(icons::material(muted ? "volume_off" : "volume_up",
+                                             muted ? accent_ : QColor(230, 237, 243), 20)));
+    muteBtn_->setEnabled(id_ != PlayerId::Bgm);
+    muteBtn_->setToolTip(id_ == PlayerId::Bgm
+                             ? tr("BGM mute follows Main Player Play/Pause/Stop")
+                             : (muted ? tr("Unmute") : tr("Mute")));
+}
+
+void PlayerPanel::startBgmAfterMain() {
+    if (id_ != PlayerId::Bgm || p().playlist().empty()) return;
+    p().setMuted(false);
+    muteBtn_->setIcon(QIcon(icons::material("volume_up", QColor(230, 237, 243), 20)));
+    muteBtn_->setToolTip(tr("Mute"));
+    p().play();
+    refreshNow();
+}
+
+void PlayerPanel::adjustFade(bool fadeIn, double deltaMs) {
+    FadeConfig fade = p().fadeConfig();
+    double& value = fadeIn ? fade.fadeInMs : fade.fadeOutMs;
+    value = std::clamp(value + deltaMs, 0.0, 10000.0);
+    controller_->setPlayerFade(id_, fade);
+    refreshFadeControls();
+}
+
+void PlayerPanel::refreshFadeControls() {
+    const FadeConfig fade = p().fadeConfig();
+    const auto format = [](double ms) {
+        return ms >= 1000.0 ? QString::number(ms / 1000.0, 'f', 1) + QStringLiteral(" s")
+                            : QString::number(qRound(ms)) + QStringLiteral(" ms");
+    };
+    if (fadeInValue_) fadeInValue_->setText(format(fade.fadeInMs));
+    if (fadeOutValue_) fadeOutValue_->setText(format(fade.fadeOutMs));
+}
+
+void PlayerPanel::autoCue() {
+    if (normalizeWorker_.joinable()) normalizeWorker_.join();
+    const std::string path = p().currentPath();
+    if (path.empty()) {
+        emit statusHint(tr("%1 has no track to cue.")
+                            .arg(id_ == PlayerId::Main ? tr("Main Player") : tr("BGM Player")));
+        emit autoCueFinished();
+        return;
+    }
+    QPointer<PlayerPanel> self(this);
+    normalizeWorker_ = std::thread([self, path, id = id_] {
+        std::string error;
+        auto decoder = openSndfileDecoder(path, error);
+        double cueSeconds = 0.0;
+        bool found = false;
+        if (decoder) {
+            constexpr int kChunk = 2048;
+            constexpr float kPeakThreshold = 0.012f;
+            std::vector<float> left(kChunk), right(kChunk);
+            int64_t frame = 0;
+            while (true) {
+                const int frames = decoder->read(left.data(), right.data(), kChunk);
+                if (frames <= 0) break;
+                for (int i = 0; i < frames; ++i) {
+                    if (std::max(std::fabs(left[static_cast<size_t>(i)]),
+                                 std::fabs(right[static_cast<size_t>(i)])) >= kPeakThreshold) {
+                        const int64_t cueFrame = std::max<int64_t>(
+                            0, frame + i - decoder->sampleRate() / 30);
+                        cueSeconds = static_cast<double>(cueFrame) /
+                                     std::max(1, decoder->sampleRate());
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) break;
+                frame += frames;
+            }
+        }
+        QMetaObject::invokeMethod(self, [self, cueSeconds, found, path] {
+            if (self) {
+                if (self->p().currentPath() == path) {
+                    self->p().seekSeconds(cueSeconds);
+                    self->refreshNow();
+                    emit self->statusHint(found
+                                              ? self->tr("Auto Cue set at %1 s.").arg(cueSeconds, 0, 'f', 2)
+                                              : self->tr("No cue point found; positioned at start."));
+                }
+                emit self->autoCueFinished();
+            }
+        }, Qt::QueuedConnection);
+    });
+}
+
+void PlayerPanel::autoNormalizePlaylist() {
+    if (normalizeWorker_.joinable()) normalizeWorker_.join();
+    const std::vector<PlaylistItem> items = p().playlist();
+    if (items.empty()) {
+        emit statusHint(tr("Add tracks before running Auto Volume."));
+        emit autoVolumeFinished();
+        return;
+    }
+    QPointer<PlayerPanel> self(this);
+    normalizeWorker_ = std::thread([self, items, id = id_] {
+        struct Measurement {
+            int index = 0;
+            float rms = 0.0f;
+        };
+        std::vector<Measurement> measurements;
+        double rmsSum = 0.0;
+        for (size_t index = 0; index < items.size(); ++index) {
+            std::string error;
+            auto decoder = openSndfileDecoder(items[index].path, error);
+            if (!decoder || items[index].missing) continue;
+            constexpr int kChunk = 8192;
+            std::vector<float> left(kChunk), right(kChunk);
+            long double sumSquares = 0.0;
+            uint64_t sampleCount = 0;
+            while (true) {
+                const int frames = decoder->read(left.data(), right.data(), kChunk);
+                if (frames <= 0) break;
+                for (int i = 0; i < frames; ++i) {
+                    const float l = left[static_cast<size_t>(i)];
+                    const float r = right[static_cast<size_t>(i)];
+                    sumSquares += static_cast<long double>(l) * l +
+                                  static_cast<long double>(r) * r;
+                    sampleCount += 2;
+                }
+            }
+            if (sampleCount == 0) continue;
+            const float rms = static_cast<float>(std::sqrt(sumSquares / sampleCount));
+            if (rms <= 1.0e-5f) continue;
+            measurements.push_back({static_cast<int>(index), rms});
+            rmsSum += rms;
+        }
+        const float targetRms = measurements.empty()
+                                    ? 0.0f
+                                    : static_cast<float>(rmsSum / measurements.size());
+        std::vector<std::pair<int, float>> gains;
+        gains.reserve(measurements.size());
+        for (const Measurement& measurement : measurements) {
+            gains.emplace_back(measurement.index,
+                               std::clamp(targetRms / measurement.rms, 0.25f, 4.0f));
+        }
+        QMetaObject::invokeMethod(self, [self, gains = std::move(gains), id] {
+            if (!self) return;
+            Player& player = self->engine_->player(id);
+            for (const auto& [index, gain] : gains) player.setTrackGain(index, gain);
+            emit self->statusHint(gains.empty()
+                                      ? self->tr("Auto Volume could not analyze any readable tracks.")
+                                      : self->tr("Auto Volume balanced %1 track(s) by measured loudness.")
+                                            .arg(gains.size()));
+            emit self->autoVolumeFinished();
+        }, Qt::QueuedConnection);
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -618,7 +837,9 @@ void PlayerPanel::refreshPlaylist() {
             QString::fromStdString(it.title.empty() ? fileName(it.path) : it.title);
         auto* row = new PlaylistRow(static_cast<int>(i) + 1, title,
                                     formatTime(it.durationSec), current, it.missing, rowHi_,
-                                    accent_);
+                                    accent_, [this, index = static_cast<int>(i)] {
+                                        controller_->selectTrack(id_, index);
+                                    });
         lwItem->setSizeHint(QSize(0, 34));
         playlist_->setItemWidget(lwItem, row);
         lwItem->setToolTip(QString::fromStdString(it.path) +
@@ -634,6 +855,14 @@ void PlayerPanel::refreshPlaylist() {
 void PlayerPanel::refreshNow() {
     Player& p = engine_->player(id_);
     const PlayerSnapshot snap = p.snapshot();
+
+    if (shuffleBtn_->isChecked() != p.shuffleEnabled()) {
+        shuffleBtn_->setChecked(p.shuffleEnabled());
+    }
+    if (repeatBtn_->isChecked() != p.repeatEnabled()) {
+        repeatBtn_->setChecked(p.repeatEnabled());
+    }
+    updateVolumeControls();
 
     updateMetadata(snap);
     updateTransport(snap);
@@ -675,7 +904,13 @@ void PlayerPanel::updateMetadata(const PlayerSnapshot& snap) {
 void PlayerPanel::updateTransport(const PlayerSnapshot& snap) {
     QString stateText;
     QColor dot;
-    switch (snap.state) {
+    const bool waitingForMain = id_ == PlayerId::Bgm &&
+                                snap.state == PlayerState::Playing &&
+                                engine_->player(PlayerId::Main).isPlaying();
+    if (waitingForMain) {
+        stateText = tr("Waiting for Main");
+        dot = theme::kWarn;
+    } else switch (snap.state) {
         case PlayerState::Playing:
             // Mockup wording for the running state.
             stateText = snap.ended ? tr("Ended") : tr("Active");

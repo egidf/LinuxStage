@@ -28,7 +28,8 @@ class SessionController;
 class PlayerPanel;
 class RackView;
 class PluginBrowser;
-class PluginEditor;
+class AudioSpectrumVisualizer;
+class MasterVolumeDial;
 class LevelMeter;
 
 class MainWindow : public QMainWindow {
@@ -44,8 +45,6 @@ protected:
 
 private slots:
     void setTab(int index);
-    void openEditorFor(lspa::RackTarget target, const QString& uid);
-    void closeEditors();
     void updateStatusBar();
     void applySettings();
     void refreshLogView();
@@ -60,6 +59,7 @@ private:
     void onCatalogOrRackChanged();
     void syncTabButtons();
     QPushButton* makeTabButton(const QString& text, const QString& iconName, int index);
+    void updateBgmAfterMainEnd();
 
     SessionController* controller_ = nullptr;
     AudioEngine* engine_ = nullptr;
@@ -80,6 +80,11 @@ private:
     LevelMeter* bgmMeter_ = nullptr;
     LevelMeter* outMeter_ = nullptr;
     QLabel* messageLabel_ = nullptr;
+    QPushButton* autoVolumeButton_ = nullptr;
+    QPushButton* mainCueButton_ = nullptr;
+    QPushButton* bgmCueButton_ = nullptr;
+    int autoVolumeJobsRemaining_ = 0;
+    bool bgmStartedAfterMain_ = false;
 
     // frameless window: edge strips used to resize the window
     QVector<QWidget*> borderStrips_;
@@ -89,11 +94,14 @@ private:
 
     // content
     QWidget* playersRow_ = nullptr;
+    QWidget* playerToolsRow_ = nullptr;
     QWidget* rackRow_ = nullptr;
     PlayerPanel* mainPanel_ = nullptr;
     PlayerPanel* bgmPanel_ = nullptr;
     RackView* rackView_ = nullptr;
     PluginBrowser* browser_ = nullptr;
+    AudioSpectrumVisualizer* spectrumVisualizer_ = nullptr;
+    MasterVolumeDial* masterVolumeDial_ = nullptr;
     QWidget* settingsPage_ = nullptr;
     int currentTab_ = 0;
 
@@ -112,7 +120,6 @@ private:
     QLabel* fadeOutBgmLabel_ = nullptr;
     QPlainTextEdit* logView_ = nullptr;
 
-    QVector<PluginEditor*> editors_;
 };
 
 }  // namespace lspa

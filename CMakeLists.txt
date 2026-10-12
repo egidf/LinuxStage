@@ -75,6 +75,8 @@ add_executable(lsp-audio-player
   src/ui/PluginEditor.cpp
   src/ui/SessionController.cpp
   src/ui/widgets/Knob.cpp
+  src/ui/widgets/AudioSpectrumVisualizer.cpp
+  src/ui/widgets/MasterVolumeDial.cpp
   src/ui/widgets/Waveform.cpp
   src/ui/widgets/Icons.cpp
   src/ui/widgets/AlbumArt.cpp
@@ -98,6 +100,7 @@ if(LSPA_BUILD_TESTS)
   enable_testing()
   add_executable(lspa_tests
     tests/TestMain.cpp
+    tests/TestPluginCatalog.cpp
     tests/TestRingBuffer.cpp
     tests/TestFade.cpp
     tests/TestSession.cpp

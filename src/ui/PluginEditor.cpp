@@ -35,15 +35,26 @@ PluginEditor::PluginEditor(SessionController* controller, RackTarget target, con
     root->setSpacing(10);
 
     auto* header = new QHBoxLayout();
+    auto* brand = new QLabel(tr("LINUX STAGE"), this);
+    brand->setStyleSheet(
+        QString("color: %1; font-size: 10px; font-weight: 800; background: transparent;")
+            .arg(theme::kAccent.name()));
+    header->addWidget(brand);
+    auto* divider = new QFrame(this);
+    divider->setFrameShape(QFrame::VLine);
+    divider->setStyleSheet(QString("color: %1;").arg(theme::kBorder.name()));
+    header->addWidget(divider);
     auto* icon = new QLabel(this);
-    icon->setPixmap(icons::pixmap(icons::Icon::Plugin, theme::kTextDim, 18));
+    icon->setPixmap(icons::pixmap(icons::Icon::Plugin, theme::kAccent, 18));
     header->addWidget(icon);
     auto* titleLabel = new QLabel(title, this);
     titleLabel->setStyleSheet("font-size: 14px; font-weight: 700;");
     header->addWidget(titleLabel, 1);
     modeLabel_ = new QLabel(this);
     modeLabel_->setStyleSheet(
-        QString("color: %1; font-size: 11px;").arg(theme::kTextFaint.name()));
+        QString("color: %1; background: %2; border: 1px solid %3; border-radius: 4px;"
+            " padding: 3px 7px; font-size: 10px;")
+            .arg(theme::kTextDim.name(), theme::kPanelDeep.name(), theme::kBorder.name()));
     header->addWidget(modeLabel_);
     auto* closeBtn = new QPushButton(tr("Close"), this);
     closeBtn->setCursor(Qt::PointingHandCursor);
@@ -133,14 +144,23 @@ void PluginEditor::buildGeneric() {
 
     int row = 0, col = 0;
     for (const PluginParam& pm : params) {
-        auto* box = new QVBoxLayout();
+        auto* control = new QWidget(genericPanel_);
+        control->setObjectName("parameterControl");
+        control->setMinimumSize(100, 142);
+        control->setStyleSheet(
+            QString("QWidget#parameterControl { background: %1; border: 1px solid %2;"
+                    " border-radius: 6px; }")
+                .arg(theme::kPanelAlt.name(), theme::kBorder.name()));
+        auto* box = new QVBoxLayout(control);
+        box->setContentsMargins(6, 8, 6, 6);
         box->setSpacing(4);
-        auto* name = new QLabel(QString::fromStdString(pm.name), genericPanel_);
+        auto* name = new QLabel(QString::fromStdString(pm.name), control);
         name->setAlignment(Qt::AlignCenter);
         name->setStyleSheet(
-            QString("color: %1; font-size: 11px;").arg(theme::kTextDim.name()));
+            QString("color: %1; font-size: 11px; background: transparent;")
+                .arg(theme::kTextDim.name()));
 
-        auto* knob = new Knob(genericPanel_);
+        auto* knob = new Knob(control);
         knob->setRange(pm.min, pm.max);
         knob->setValue(pm.value);
         knob->setDefaultValue(pm.def);
@@ -156,9 +176,9 @@ void PluginEditor::buildGeneric() {
         connect(knob, &Knob::dragStarted, this, [this] { timer_->stop(); });
         connect(knob, &Knob::dragFinished, this, [this] { timer_->start(); });
 
-        box->addWidget(knob, 0, Qt::AlignHCenter);
         box->addWidget(name);
-        grid->addLayout(box, row, col);
+        box->addWidget(knob, 1, Qt::AlignHCenter);
+        grid->addWidget(control, row, col);
         knobs_.push_back(knob);
         if (++col >= 4) {
             col = 0;

@@ -43,6 +43,15 @@ struct EngineMeter {
     bool clipping = false;
 };
 
+enum class SoundPreset : int {
+    Universal = 0,
+    Clarity,
+    Tape,
+    Cinematic,
+    DolbySurround,
+    Sony360RealityAudio
+};
+
 class AudioEngine {
 public:
     AudioEngine();
@@ -64,6 +73,12 @@ public:
     // --- master ---
     void setMasterVolume(float volume);
     float masterVolume() const { return masterVolume_.load(std::memory_order_relaxed); }
+    void setSoundPreset(SoundPreset preset) {
+        soundPreset_.store(static_cast<int>(preset), std::memory_order_relaxed);
+    }
+    SoundPreset soundPreset() const {
+        return static_cast<SoundPreset>(soundPreset_.load(std::memory_order_relaxed));
+    }
 
     // --- rack (must be called from a non audio thread) ---
     // Hands the chain to the engine; it is activated here and swapped in at
@@ -90,6 +105,8 @@ public:
     // --- meters / diagnostics ---
     EngineMeter meter(PlayerId id) const;
     EngineMeter masterMeter() const;
+    static constexpr size_t kWaveformSamples = 4096;
+    bool copyMasterWaveform(std::array<float, kWaveformSamples>& samples) const;
     float cpuLoad() const { return cpu_.value(); }
     std::string lastError() const;
     int64_t xrunCount() const { return xruns_.load(std::memory_order_relaxed); }
@@ -147,11 +164,18 @@ private:
     std::atomic<size_t> retireRead_{0};
 
     std::atomic<float> masterVolume_{1.0f};
+    std::atomic<int> soundPreset_{static_cast<int>(SoundPreset::Universal)};
+    float presetLowL_ = 0.0f;
+    float presetLowR_ = 0.0f;
+    float presetHighL_ = 0.0f;
+    float presetHighR_ = 0.0f;
     std::array<std::atomic<float>, 2> meterPeakL_{};
     std::array<std::atomic<float>, 2> meterPeakR_{};
     std::atomic<float> masterPeakL_{0.0f};
     std::atomic<float> masterPeakR_{0.0f};
     std::atomic<bool> masterClipping_{false};
+    std::array<std::atomic<float>, kWaveformSamples> waveformSamples_{};
+    std::atomic<size_t> waveformWrite_{0};
     std::atomic<int64_t> xruns_{0};
 
     CpuLoad cpu_;

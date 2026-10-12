@@ -271,7 +271,11 @@ bool resolveParentWindow(Editor* e, void* parentQWidget, unsigned long parentXId
             e->parentXid = static_cast<Window>(w->winId());
             return true;
         }
-        LSPA_LOG_WARN("Lv2UiHost: Qt platform is not X11, cannot embed; using standalone window");
+        errorOut = "inline LV2 plugin UIs require the Qt XCB platform";
+        return false;
+    } else if (parentQWidget != nullptr) {
+        errorOut = "inline LV2 plugin UIs require a running Qt application";
+        return false;
     } else if (parentXId != 0) {
         e->parentXid = static_cast<Window>(parentXId);
         return true;
@@ -324,7 +328,11 @@ void resizeToWidget(Editor* e) {
         const int h = attrs.height;
         // Queued: may be called from the pump thread.
         QMetaObject::invokeMethod(
-            c, [c, w, h] { c->resize(w, h); }, Qt::QueuedConnection);
+            c, [c, w, h] {
+                c->setMinimumSize(w, h);
+                c->updateGeometry();
+                c->resize(w, h);
+            }, Qt::QueuedConnection);
     } else if (e->standaloneXid != 0) {
         XResizeWindow(e->dpy, e->standaloneXid, static_cast<unsigned>(attrs.width),
                       static_cast<unsigned>(attrs.height));
@@ -453,20 +461,6 @@ bool createSuilInstance(Editor* e, const lv2ui::UiChoice& ui, std::string& error
     e->suil = suil_instance_new(
         e->suilHost, e->lv2, LV2_UI__X11UI, pluginUri.c_str(), ui.uiUri.c_str(),
         ui.typeUri.c_str(), ui.bundlePath.c_str(), ui.binaryPath.c_str(), e->featureList);
-    if (e->suil == nullptr && e->container != nullptr) {
-        // Embedding attempt failed; retry without ui:parent so the UI opens
-        // its own top-level window (standalone fallback).
-        LSPA_LOG_WARN("Lv2UiHost: embedding failed for %s, retrying standalone",
-                      pluginUri.c_str());
-        std::vector<const LV2_Feature*> feats;
-        for (int i = 0; e->featureList[i] != nullptr; ++i) {
-            if (e->featureList[i] != &e->fParent) feats.push_back(e->featureList[i]);
-        }
-        feats.push_back(nullptr);
-        e->suil = suil_instance_new(e->suilHost, e->lv2, LV2_UI__X11UI, pluginUri.c_str(),
-                                    ui.uiUri.c_str(), ui.typeUri.c_str(), ui.bundlePath.c_str(),
-                                    ui.binaryPath.c_str(), feats.data());
-    }
     if (e->suil == nullptr) {
         errorOut = "failed to instantiate the native plugin UI (Suil returned no instance)";
         return false;
@@ -498,6 +492,10 @@ bool settleWidget(Editor* e, std::string& errorOut) {
 
     if (e->widgetXid == 0) {
         if (e->showIface != nullptr && e->showIface->show != nullptr) {
+            if (e->container != nullptr) {
+                errorOut = "plugin UI does not expose an embeddable X11 widget";
+                return false;
+            }
             const int rc = e->showIface->show(suil_instance_get_handle(e->suil));
             if (rc == 0) {
                 e->mode = "standalone";

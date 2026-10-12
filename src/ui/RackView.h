@@ -1,5 +1,5 @@
-// RackView.h - effects rack for one player: header, preset controls and the
-// horizontal card list.
+// RackView.h - effects rack for one player: header, preset controls and a
+// horizontally scrolling sequence of plugin UIs.
 
 #pragma once
 
@@ -8,10 +8,9 @@
 #include "core/Types.h"
 
 class QComboBox;
-class QHBoxLayout;
 class QLabel;
 class QScrollArea;
-class QVBoxLayout;
+class QHBoxLayout;
 
 namespace lspa {
 
@@ -26,11 +25,11 @@ public:
     RackTarget target() const { return target_; }
     void setTarget(RackTarget target);
     void reload();
+    void closeNativeEditors();
 
 signals:
     void addPluginRequested();
     void targetSelected(lspa::RackTarget target);
-    void editPluginRequested(lspa::RackTarget target, const QString& uid);
 
 private slots:
     void onSavePreset();
@@ -39,11 +38,7 @@ private slots:
 private:
     void buildUi();
     void rebuildCards();
-    void syncArrowHeights();
     QColor accent() const;
-
-protected:
-    bool eventFilter(QObject* watched, QEvent* event) override;
 
     SessionController* controller_ = nullptr;
     RackTarget target_ = RackTarget::MainPlayer;
@@ -54,10 +49,6 @@ protected:
     QScrollArea* scroll_ = nullptr;
     QWidget* flow_ = nullptr;
     QHBoxLayout* flowLayout_ = nullptr;
-    // Signal arrows paired with the card that follows them, so each arrow's
-    // height tracks its card and the pixmap stays vertically centered
-    // (flow_ stretches to the viewport, so AlignVCenter alone would not).
-    QList<QPair<QLabel*, QWidget*>> arrowCards_;
 };
 
 }  // namespace lspa

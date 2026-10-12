@@ -38,6 +38,7 @@ void Player::setPlaylist(std::vector<PlaylistItem> items) {
     {
         std::lock_guard<std::mutex> lock(playlistMutex_);
         playlist_ = std::move(items);
+        trackGains_.assign(playlist_.size(), 1.0f);
         if (currentIndex_ >= static_cast<int>(playlist_.size())) {
             currentIndex_ = playlist_.empty() ? -1 : 0;
         }
@@ -54,7 +55,10 @@ std::vector<PlaylistItem> Player::playlist() const {
 void Player::appendItems(std::vector<PlaylistItem> items) {
     std::lock_guard<std::mutex> lock(playlistMutex_);
     if (playlist_.empty()) currentIndex_ = 0;
-    for (auto& it : items) playlist_.push_back(std::move(it));
+    for (auto& it : items) {
+        playlist_.push_back(std::move(it));
+        trackGains_.push_back(1.0f);
+    }
     LSPA_LOG_DEBUG("Player %s: playlist now has %zu items", name_.c_str(), playlist_.size());
 }
 
@@ -70,6 +74,9 @@ void Player::removeItems(const std::vector<int>& indices) {
             const int idx = *it;
             if (idx < 0 || idx >= static_cast<int>(playlist_.size())) continue;
             playlist_.erase(playlist_.begin() + idx);
+            if (idx < static_cast<int>(trackGains_.size())) {
+                trackGains_.erase(trackGains_.begin() + idx);
+            }
             if (idx == currentIndex_) {
                 currentChanged = true;
             } else if (idx < currentIndex_) {
@@ -93,6 +100,7 @@ void Player::clearPlaylist() {
     {
         std::lock_guard<std::mutex> lock(playlistMutex_);
         playlist_.clear();
+        trackGains_.clear();
         currentIndex_ = -1;
     }
     stop();
@@ -111,9 +119,46 @@ void Player::setVolume(float volume) {
 
 float Player::volume() const { return volume_.load(std::memory_order_relaxed); }
 
+void Player::setTrackGain(int index, float gain) {
+    std::lock_guard<std::mutex> lock(playlistMutex_);
+    if (index < 0 || index >= static_cast<int>(playlist_.size())) return;
+    if (trackGains_.size() < playlist_.size()) trackGains_.resize(playlist_.size(), 1.0f);
+    trackGains_[static_cast<size_t>(index)] = std::clamp(gain, 0.25f, 4.0f);
+    if (index == currentIndex_) {
+        activeTrackGain_.store(trackGains_[static_cast<size_t>(index)], std::memory_order_relaxed);
+    }
+}
+
+float Player::trackGain(int index) const {
+    std::lock_guard<std::mutex> lock(playlistMutex_);
+    if (index < 0 || index >= static_cast<int>(trackGains_.size())) return 1.0f;
+    return trackGains_[static_cast<size_t>(index)];
+}
+
 void Player::setMuted(bool muted) { muted_.store(muted, std::memory_order_relaxed); }
 
-bool Player::muted() const { return muted_.load(std::memory_order_relaxed); }
+void Player::setShuffleEnabled(bool enabled) {
+    std::lock_guard<std::mutex> lock(playlistMutex_);
+    shuffleEnabled_.store(enabled, std::memory_order_relaxed);
+    shuffleOrder_.clear();
+    shuffleCursor_ = 0;
+    if (!enabled || playlist_.empty()) return;
+    shuffleOrder_.resize(playlist_.size());
+    for (size_t i = 0; i < shuffleOrder_.size(); ++i) {
+        shuffleOrder_[i] = static_cast<int>(i);
+    }
+    std::shuffle(shuffleOrder_.begin(), shuffleOrder_.end(), random_);
+    const auto current = std::find(shuffleOrder_.begin(), shuffleOrder_.end(), currentIndex_);
+    if (current != shuffleOrder_.end()) {
+        std::rotate(shuffleOrder_.begin(), current, shuffleOrder_.end());
+    }
+    shuffleCursor_ = 0;
+}
+
+bool Player::muted() const {
+    return muted_.load(std::memory_order_relaxed) ||
+           mainTransportMuted_.load(std::memory_order_relaxed);
+}
 
 void Player::setFadeConfig(const FadeConfig& fade) {
     std::lock_guard<std::mutex> lock(fadeMutex_);
@@ -178,11 +223,16 @@ void Player::play() {
 }
 
 void Player::playIndex(int index) {
+    bool alreadyPlaying = false;
     {
         std::lock_guard<std::mutex> lock(playlistMutex_);
         if (index < 0 || index >= static_cast<int>(playlist_.size())) return;
+        alreadyPlaying = currentIndex_ == index &&
+                         state_.load(std::memory_order_relaxed) ==
+                             static_cast<int>(PlayerState::Playing);
         currentIndex_ = index;
     }
+    if (alreadyPlaying) return;
     ended_.store(false);
     eof_.store(false);
     if (state_.load() == static_cast<int>(PlayerState::Playing)) {
@@ -240,13 +290,11 @@ void Player::stop() {
 
 void Player::next() {
     int target = -1;
-    int count = 0;
     {
         std::lock_guard<std::mutex> lock(playlistMutex_);
-        count = static_cast<int>(playlist_.size());
-        if (count == 0) return;
-        target = (currentIndex_ + 1) % count;
+        target = nextIndexLocked(true);
     }
+    if (target < 0) return;
     if (state_.load() == static_cast<int>(PlayerState::Playing)) {
         switchIndex_.store(target);
         requestAction(Action::Switch);
@@ -271,7 +319,12 @@ void Player::prev() {
         std::lock_guard<std::mutex> lock(playlistMutex_);
         count = static_cast<int>(playlist_.size());
         if (count == 0) return;
-        target = (currentIndex_ - 1 + count) % count;
+        if (shuffleEnabled_.load(std::memory_order_relaxed) && count > 1 &&
+            shuffleCursor_ > 0 && shuffleCursor_ < shuffleOrder_.size()) {
+            target = shuffleOrder_[--shuffleCursor_];
+        } else {
+            target = (currentIndex_ - 1 + count) % count;
+        }
     }
     if (state_.load() == static_cast<int>(PlayerState::Playing)) {
         switchIndex_.store(target);
@@ -288,6 +341,35 @@ void Player::prev() {
         wakeFeeder();
     }
     LSPA_LOG_DEBUG("Player %s: prev -> %d", name_.c_str(), target);
+}
+
+int Player::nextIndexLocked(bool allowWrap) {
+    const int count = static_cast<int>(playlist_.size());
+    if (count <= 0) return -1;
+    if (shuffleEnabled_.load(std::memory_order_relaxed) && count > 1) {
+        if (shuffleOrder_.size() != playlist_.size()) {
+            shuffleOrder_.resize(playlist_.size());
+            for (size_t i = 0; i < shuffleOrder_.size(); ++i) {
+                shuffleOrder_[i] = static_cast<int>(i);
+            }
+            std::shuffle(shuffleOrder_.begin(), shuffleOrder_.end(), random_);
+            const auto current = std::find(shuffleOrder_.begin(), shuffleOrder_.end(), currentIndex_);
+            shuffleCursor_ = current == shuffleOrder_.end()
+                                 ? 0
+                                 : static_cast<size_t>(std::distance(shuffleOrder_.begin(), current));
+        }
+        if (shuffleCursor_ + 1 < shuffleOrder_.size()) {
+            return shuffleOrder_[++shuffleCursor_];
+        }
+        if (!allowWrap) return -1;
+        std::shuffle(shuffleOrder_.begin(), shuffleOrder_.end(), random_);
+        if (shuffleOrder_.front() == currentIndex_) std::swap(shuffleOrder_[0], shuffleOrder_[1]);
+        shuffleCursor_ = 0;
+        return shuffleOrder_.front();
+    }
+    const int target = currentIndex_ + 1;
+    if (target < count) return target;
+    return allowWrap ? 0 : -1;
 }
 
 bool Player::seekSeconds(double seconds) {
@@ -329,6 +411,9 @@ void Player::openTrackLocked(int index, bool flush) {
         if (index < 0 || index >= static_cast<int>(playlist_.size())) return;
         currentIndex_ = index;
         path = playlist_[static_cast<size_t>(index)].path;
+        activeTrackGain_.store(index < static_cast<int>(trackGains_.size())
+                                   ? trackGains_[static_cast<size_t>(index)] : 1.0f,
+                               std::memory_order_relaxed);
         playlist_[static_cast<size_t>(index)].missing = false;
         playlist_[static_cast<size_t>(index)].error.clear();
     }
@@ -445,13 +530,11 @@ void Player::feederLoop() {
         // Natural end of track: advance when the ring is drained.
         if (playing && eof_.load(std::memory_order_relaxed) && ring_.readAvailable() == 0) {
             int next = -1;
-            int count = 0;
             {
                 std::lock_guard<std::mutex> lock(playlistMutex_);
-                count = static_cast<int>(playlist_.size());
-                next = currentIndex_ + 1;
+                next = nextIndexLocked(repeatEnabled_.load(std::memory_order_relaxed));
             }
-            if (next < count) {
+            if (next >= 0) {
                 switchToIndex_.store(next);
                 LSPA_LOG_INFO("Player %s: track ended, advancing to %d", name_.c_str(), next);
                 didWork = true;
@@ -512,13 +595,15 @@ void Player::pull(float* left, float* right, int nFrames, PlayerBlockInfo& out) 
     if (fadeInTrigger_.exchange(false)) {
         gain_.store(0.0f);
     }
+    const bool mainTransportMuted = mainTransportMuted_.load(std::memory_order_relaxed);
+    if (mainTransportMuted) gain_.store(0.0f, std::memory_order_relaxed);
 
     float g = gain_.load(std::memory_order_relaxed);
     int action = pendingAction_.load(std::memory_order_relaxed);
 
     float target = (st == static_cast<int>(PlayerState::Playing)) ? 1.0f : 0.0f;
     if (action != static_cast<int>(Action::None)) target = 0.0f;
-    if (muted_.load(std::memory_order_relaxed)) target = 0.0f;
+    if (muted_.load(std::memory_order_relaxed) || mainTransportMuted) target = 0.0f;
 
     const double sr = sampleRate_;
     float step;
@@ -526,7 +611,10 @@ void Player::pull(float* left, float* right, int nFrames, PlayerBlockInfo& out) 
         const double sec = std::max(0.0, fade.fadeInMs) / 1000.0;
         step = sec > 0.0 ? static_cast<float>(1.0 / (sec * sr)) : 1.0f;
     } else {
-        const double sec = std::max(0.0, fade.fadeOutMs) / 1000.0;
+        const double fadeOutMs = action == static_cast<int>(Action::Pause)
+                                     ? 8.0
+                                     : fade.fadeOutMs;
+        const double sec = std::max(0.0, fadeOutMs) / 1000.0;
         step = sec > 0.0 ? -static_cast<float>(1.0 / (sec * sr)) : -1.0f;
     }
 
@@ -565,9 +653,9 @@ void Player::pull(float* left, float* right, int nFrames, PlayerBlockInfo& out) 
         pendingAction_.store(static_cast<int>(Action::None));
     }
 
-    out.volume = muted_.load(std::memory_order_relaxed) ? 0.0f
-                                                        : volume_.load(std::memory_order_relaxed);
-    out.muted = muted_.load(std::memory_order_relaxed);
+    out.volume = volume_.load(std::memory_order_relaxed) *
+                 activeTrackGain_.load(std::memory_order_relaxed);
+    out.muted = muted_.load(std::memory_order_relaxed) || mainTransportMuted;
 }
 
 bool Player::isActive() const {

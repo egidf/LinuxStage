@@ -66,6 +66,7 @@ public:
     void removePlugin(RackTarget target, const QString& uid);
     void movePlugin(RackTarget target, const QString& uid, int delta);
     void togglePlugin(RackTarget target, const QString& uid, bool enabled);
+    void setPlayerFade(PlayerId id, const FadeConfig& fade);
     void setParameter(RackTarget target, const QString& uid, const QString& symbol, float value);
     void rebuildRack(RackTarget target);
     void rebuildAllRacks();
@@ -81,6 +82,7 @@ public:
 
 signals:
     void catalogUpdated();
+    void rackAboutToChange(lspa::RackTarget target);
     void rackChanged(lspa::RackTarget target);
     void playlistChanged(lspa::PlayerId id);
     void sessionMessage(const QString& text, bool isError);

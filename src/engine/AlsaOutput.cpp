@@ -3,6 +3,7 @@
 #include <alsa/asoundlib.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <thread>
@@ -79,38 +80,47 @@ public:
     bool write(const float* interleaved, int nFrames) override {
         if (!pcm_) return false;
         const snd_pcm_sframes_t frames = static_cast<snd_pcm_sframes_t>(nFrames);
+        const void* data = interleaved;
 
-        if (formatIsFloat_) {
-            snd_pcm_sframes_t w = snd_pcm_writei(pcm_, interleaved, frames);
-            if (w == frames) return true;
-            if (w < 0) return recover(static_cast<int>(w), interleaved, nFrames);
-            // Short write: pad with silence and continue.
-            const int err = snd_pcm_writei(pcm_, interleaved + w * channels_, frames - w) < 0
-                                ? 0
-                                : 0;
-            (void)err;
-            return true;
+        if (!formatIsFloat_) {
+            for (size_t i = 0; i < static_cast<size_t>(nFrames) * channels_; ++i) {
+                const float sample = std::clamp(interleaved[i], -1.0f, 1.0f);
+                interleave_[i] = static_cast<int16_t>(sample * 32767.0f);
+            }
+            data = interleave_.data();
         }
 
-        // S16 conversion
-        for (size_t i = 0; i < static_cast<size_t>(nFrames) * channels_; ++i) {
-            float s = interleaved[i];
-            if (s > 1.0f) s = 1.0f;
-            if (s < -1.0f) s = -1.0f;
-            interleave_[i] = static_cast<int16_t>(s * 32767.0f);
-        }
-        snd_pcm_sframes_t w = snd_pcm_writei(pcm_, interleave_.data(), frames);
-        if (w == frames) return true;
-        if (w < 0) {
-            const int e = static_cast<int>(w);
-            int err = snd_pcm_prepare(pcm_);
-            if (err < 0) {
-                LSPA_LOG_ERROR("ALSA: device '%s' lost: %s", device_.c_str(), snd_strerror(err));
+        const auto* bytes = static_cast<const unsigned char*>(data);
+        const size_t frameBytes = static_cast<size_t>(channels_) *
+                                  (formatIsFloat_ ? sizeof(float) : sizeof(int16_t));
+        snd_pcm_sframes_t offset = 0;
+        int recoveryCount = 0;
+        while (offset < frames) {
+            const auto* remaining = bytes + static_cast<size_t>(offset) * frameBytes;
+            const snd_pcm_sframes_t written = snd_pcm_writei(pcm_, remaining, frames - offset);
+            if (written > 0) {
+                offset += written;
+                recoveryCount = 0;
+                continue;
+            }
+            if (written == 0 || written == -EAGAIN) {
+                if (snd_pcm_wait(pcm_, 1000) < 0) return false;
+                continue;
+            }
+
+            if (++recoveryCount > 3) {
+                LSPA_LOG_ERROR("ALSA: repeated write failure on '%s': %s", device_.c_str(),
+                               snd_strerror(static_cast<int>(written)));
                 return false;
             }
-            LSPA_LOG_WARN("ALSA: xrun recovered (%s)", snd_strerror(e));
-            w = snd_pcm_writei(pcm_, interleave_.data(), frames);
-            return w >= 0;
+            const int recovered = snd_pcm_recover(pcm_, static_cast<int>(written), 1);
+            if (recovered < 0) {
+                LSPA_LOG_ERROR("ALSA: cannot recover '%s': %s", device_.c_str(),
+                               snd_strerror(recovered));
+                return false;
+            }
+            LSPA_LOG_WARN("ALSA: recovered playback write on '%s' (%s)", device_.c_str(),
+                          snd_strerror(static_cast<int>(written)));
         }
         return true;
     }
@@ -118,30 +128,6 @@ public:
     std::string name() const override { return "ALSA:" + device_; }
 
 private:
-    bool recover(int err, const float* interleaved, int nFrames) {
-        if (err == -EPIPE) {
-            LSPA_LOG_WARN("ALSA: buffer underrun on '%s'", device_.c_str());
-            int e = snd_pcm_prepare(pcm_);
-            if (e < 0) {
-                LSPA_LOG_ERROR("ALSA: cannot recover: %s", snd_strerror(e));
-                return false;
-            }
-            snd_pcm_writei(pcm_, interleaved, static_cast<snd_pcm_sframes_t>(nFrames));
-            return true;
-        }
-        if (err == -ESTRPIPE) {
-            // Device suspended: wait for it to resume.
-            int e = 0;
-            while ((e = snd_pcm_resume(pcm_)) == -EAGAIN) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            }
-            if (e < 0) snd_pcm_prepare(pcm_);
-            return true;
-        }
-        int e = snd_pcm_prepare(pcm_);
-        return e >= 0;
-    }
-
     std::string device_;
     snd_pcm_t* pcm_ = nullptr;
     int sampleRate_ = 0;

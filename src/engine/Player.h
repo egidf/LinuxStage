@@ -21,6 +21,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <random>
 #include <string>
 #include <thread>
 #include <vector>
@@ -50,7 +51,7 @@ inline const char* playerStateName(PlayerState s) {
 struct PlayerBlockInfo {
     float rampStart = 1.0f;  // gain at first frame of the block
     float rampEnd = 1.0f;    // gain at last frame of the block
-    float volume = 1.0f;     // user volume (already includes mute = 0)
+    float volume = 1.0f;     // user volume and track normalization gain
     bool muted = false;
 };
 
@@ -85,8 +86,17 @@ public:
     std::vector<PlaylistItem> playlist() const;
     void setVolume(float volume);
     float volume() const;
+    void setTrackGain(int index, float gain);
+    float trackGain(int index) const;
     void setMuted(bool muted);
+    void setMainTransportMuted(bool muted) {
+        mainTransportMuted_.store(muted, std::memory_order_relaxed);
+    }
     bool muted() const;
+    void setShuffleEnabled(bool enabled);
+    bool shuffleEnabled() const { return shuffleEnabled_.load(); }
+    void setRepeatEnabled(bool enabled) { repeatEnabled_.store(enabled); }
+    bool repeatEnabled() const { return repeatEnabled_.load(); }
     void setFadeConfig(const FadeConfig& fade);
     FadeConfig fadeConfig() const;
 
@@ -113,6 +123,10 @@ public:
 
     // True while the player still has audio to give (or may resume soon).
     bool isActive() const;
+    bool isPlaying() const {
+        return state_.load(std::memory_order_relaxed) ==
+               static_cast<int>(PlayerState::Playing);
+    }
 
     // Number of times the audio thread found the ring empty while playing.
     uint64_t underrunCount() const { return underruns_.load(std::memory_order_relaxed); }
@@ -134,6 +148,7 @@ private:
 
     void feederLoop();
     void openTrackLocked(int index, bool flush);  // feeder thread only
+    int nextIndexLocked(bool allowWrap);
     void requestAction(Action a);
     void wakeFeeder();
 
@@ -144,7 +159,11 @@ private:
     // --- playlist (guarded by playlistMutex_) ---
     mutable std::mutex playlistMutex_;
     std::vector<PlaylistItem> playlist_;
+    std::vector<float> trackGains_;
+    std::vector<int> shuffleOrder_;
+    size_t shuffleCursor_ = 0;
     int currentIndex_ = -1;
+    std::mt19937 random_{std::random_device{}()};
 
     // --- feeder-owned decoder state ---
     std::unique_ptr<IDecoder> decoder_;
@@ -174,7 +193,11 @@ private:
     std::atomic<int64_t> positionFrames_{0};
     std::atomic<int64_t> totalFrames_{0};
     std::atomic<float> volume_{1.0f};
+    std::atomic<float> activeTrackGain_{1.0f};
     std::atomic<bool> muted_{false};
+    std::atomic<bool> mainTransportMuted_{false};
+    std::atomic<bool> shuffleEnabled_{false};
+    std::atomic<bool> repeatEnabled_{false};
     std::atomic<bool> eof_{false};
     std::atomic<bool> ended_{false};
     std::atomic<uint64_t> underruns_{0};

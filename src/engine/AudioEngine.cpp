@@ -16,6 +16,7 @@ constexpr int kTailMs = 400;  // let plugin tails ring out after a player stops
 AudioEngine::AudioEngine() {
     for (auto& m : meterPeakL_) m.store(0.0f);
     for (auto& m : meterPeakR_) m.store(0.0f);
+    for (auto& sample : waveformSamples_) sample.store(0.0f);
 }
 
 AudioEngine::~AudioEngine() { stop(); }
@@ -242,6 +243,20 @@ EngineMeter AudioEngine::masterMeter() const {
     return m;
 }
 
+bool AudioEngine::copyMasterWaveform(
+    std::array<float, kWaveformSamples>& samples) const {
+    const size_t written = waveformWrite_.load(std::memory_order_acquire);
+    const size_t count = std::min(written, kWaveformSamples);
+    samples.fill(0.0f);
+    const size_t outputOffset = kWaveformSamples - count;
+    const size_t sourceStart = written - count;
+    for (size_t i = 0; i < count; ++i) {
+        samples[outputOffset + i] =
+            waveformSamples_[(sourceStart + i) % kWaveformSamples].load(std::memory_order_relaxed);
+    }
+    return count > 0;
+}
+
 std::string AudioEngine::lastError() const {
     std::lock_guard<std::mutex> lock(errorMutex_);
     return lastError_;
@@ -363,6 +378,8 @@ void AudioEngine::processBlock(float* mixLeft, float* mixRight, int nFrames) {
     swapChains();
 
     const float master = masterVolume_.load(std::memory_order_relaxed);
+    const bool mainHasPriority = players_[static_cast<size_t>(PlayerId::Main)]->isPlaying();
+    players_[static_cast<size_t>(PlayerId::Bgm)]->setMainTransportMuted(mainHasPriority);
     float peakMasterL = 0.0f, peakMasterR = 0.0f;
 
     for (size_t pi = 0; pi < 2; ++pi) {
@@ -415,15 +432,55 @@ void AudioEngine::processBlock(float* mixLeft, float* mixRight, int nFrames) {
 
     float peakL = 0.0f, peakR = 0.0f;
     bool clipping = false;
+    const SoundPreset preset = soundPreset();
     for (int i = 0; i < nFrames; ++i) {
-        float l = mixLeft[i] * master;
-        float r = mixRight[i] * master;
+        float dryL = mixLeft[i];
+        float dryR = mixRight[i];
+        presetLowL_ += 0.018f * (dryL - presetLowL_);
+        presetLowR_ += 0.018f * (dryR - presetLowR_);
+        presetHighL_ += 0.24f * (dryL - presetHighL_);
+        presetHighR_ += 0.24f * (dryR - presetHighR_);
+        const float mid = (dryL + dryR) * 0.5f;
+        const float side = (dryL - dryR) * 0.5f;
+        switch (preset) {
+            case SoundPreset::Universal:
+                break;
+            case SoundPreset::Clarity:
+                dryL = dryL - presetLowL_ * 0.22f + (dryL - presetHighL_) * 0.16f;
+                dryR = dryR - presetLowR_ * 0.22f + (dryR - presetHighR_) * 0.16f;
+                break;
+            case SoundPreset::Tape:
+                dryL = std::tanh(dryL * 1.22f) / std::tanh(1.22f);
+                dryR = std::tanh(dryR * 1.22f) / std::tanh(1.22f);
+                break;
+            case SoundPreset::Cinematic:
+                dryL += presetLowL_ * 0.20f + (dryL - presetHighL_) * 0.08f;
+                dryR += presetLowR_ * 0.20f + (dryR - presetHighR_) * 0.08f;
+                break;
+            case SoundPreset::DolbySurround:
+                dryL = mid + side * 1.28f;
+                dryR = mid - side * 1.28f;
+                break;
+            case SoundPreset::Sony360RealityAudio:
+                dryL = mid + side * 1.48f + presetLowR_ * 0.035f;
+                dryR = mid - side * 1.48f + presetLowL_ * 0.035f;
+                break;
+        }
+        float l = dryL * master;
+        float r = dryR * master;
         if (l > 1.0f || l < -1.0f || r > 1.0f || r < -1.0f) clipping = true;
         peakL = std::max(peakL, std::fabs(l));
         peakR = std::max(peakR, std::fabs(r));
         mixLeft[i] = l;
         mixRight[i] = r;
     }
+    const size_t waveformStart = waveformWrite_.load(std::memory_order_relaxed);
+    for (int i = 0; i < nFrames; ++i) {
+        waveformSamples_[(waveformStart + static_cast<size_t>(i)) % kWaveformSamples].store(
+            (mixLeft[i] + mixRight[i]) * 0.5f, std::memory_order_relaxed);
+    }
+    waveformWrite_.store(waveformStart + static_cast<size_t>(nFrames),
+                          std::memory_order_release);
     const float prevML = masterPeakL_.load(std::memory_order_relaxed);
     const float prevMR = masterPeakR_.load(std::memory_order_relaxed);
     masterPeakL_.store(std::max(peakL, prevML * 0.85f), std::memory_order_relaxed);

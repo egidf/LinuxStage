@@ -78,6 +78,17 @@ struct PluginDescriptor {
     std::string warning;      // non-fatal scan diagnostic
 };
 
+inline std::string lowerAscii(std::string s) {
+    for (char& ch : s) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    return s;
+}
+
+inline bool isLspPluginDescriptor(const PluginDescriptor& d) {
+    const std::string hay = lowerAscii(d.name + " " + d.label + " " + d.author + " " + d.uri +
+                                       " " + d.bundle + " " + d.category);
+    return hay.find("lsp") != std::string::npos;
+}
+
 struct PluginParam {
     std::string symbol;
     std::string name;

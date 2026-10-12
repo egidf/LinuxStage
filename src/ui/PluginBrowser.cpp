@@ -117,7 +117,7 @@ PluginBrowser::PluginBrowser(SessionController* controller, QWidget* parent)
     root->setSpacing(8);
 
     auto* headerRow = new QHBoxLayout();
-    auto* title = new QLabel(tr("Plugin Browser"), this);
+    auto* title = new QLabel(tr("LSP Plugins"), this);
     title->setStyleSheet("font-size: 14px; font-weight: 700;");
     headerRow->addWidget(title);
     headerRow->addStretch(1);
@@ -131,7 +131,7 @@ PluginBrowser::PluginBrowser(SessionController* controller, QWidget* parent)
     root->addLayout(headerRow);
 
     search_ = new QLineEdit(this);
-    search_->setPlaceholderText(tr("Search plugin..."));
+    search_->setPlaceholderText(tr("Search LSP plugin..."));
     search_->setClearButtonEnabled(true);
     search_->addAction(QIcon(icons::pixmap(icons::Icon::Search, theme::kTextDim, 14)),
                        QLineEdit::LeadingPosition);
@@ -162,7 +162,7 @@ PluginBrowser::PluginBrowser(SessionController* controller, QWidget* parent)
                      theme::kTextFaint.name()));
         return b;
     };
-    auto* lv2Chip = makeChip(tr("LV2 (Linux)"), true, tr("Show LV2 plugins discovered via Lilv"));
+    auto* lv2Chip = makeChip(tr("LV2 (LSP)"), true, tr("Show LSP plugins discovered via Lilv"));
     auto* vst3Chip = makeChip(tr("VST3 (Windows)"), false,
                               tr("VST3 hosting arrives with the Windows milestone (FR-12)"));
     chips->addWidget(lv2Chip);
@@ -242,10 +242,10 @@ void PluginBrowser::rebuildList() {
     const bool scanning = controller_->catalogBusy();
     emptyLabel_->setVisible(shown == 0);
     if (shown == 0) {
-        emptyLabel_->setText(scanning ? tr("Scanning plugins...")
-                                      : tr("No plugin matches your search."));
+        emptyLabel_->setText(scanning ? tr("Scanning LSP plugins...")
+                                      : tr("No LSP plugin matches your search."));
     }
-    countLabel_->setText(scanning ? tr("Scanning...") : tr("%1 plugin(s)").arg(shown));
+    countLabel_->setText(scanning ? tr("Scanning...") : tr("%1 LSP plugin(s)").arg(shown));
 }
 
 }  // namespace lspa

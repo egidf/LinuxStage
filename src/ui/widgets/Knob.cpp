@@ -93,11 +93,17 @@ void Knob::setActive(bool active) {
 }
 
 QSize Knob::sizeHint() const {
-    return QSize(76, kLabelPx + kKnobSize + kValuePx);
+    return QSize(qMax(76, diameter_ + 24), kLabelPx + diameter_ + kValuePx);
 }
 
 QSize Knob::minimumSizeHint() const {
-    return QSize(52, kLabelPx + 28 + kValuePx);
+    return QSize(qMax(52, diameter_ + 12), kLabelPx + qMax(28, diameter_ - 16) + kValuePx);
+}
+
+void Knob::setDiameter(int diameter) {
+    diameter_ = qBound(28, diameter, 240);
+    updateGeometry();
+    update();
 }
 
 float Knob::normalized() const {
@@ -126,7 +132,7 @@ void Knob::paintEvent(QPaintEvent*) {
     const qreal availBottom = h - kValuePx - 1.0;
 
     // knob circle centered in the band between the label and the readout
-    const qreal maxD = std::min({w - 4.0, availBottom - availTop, kKnobSize});
+    const qreal maxD = std::min({w - 4.0, availBottom - availTop, qreal(diameter_)});
     const qreal d = qMax(10.0, maxD);
     const QRectF body(w / 2.0 - d / 2.0,
                       availTop + qMax(0.0, availBottom - availTop - d) / 2.0, d, d);

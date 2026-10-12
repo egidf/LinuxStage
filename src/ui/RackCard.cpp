@@ -13,6 +13,7 @@
 #include <cmath>
 #include <functional>
 
+#include "plugins/Lv2UiHost.h"
 #include "ui/theme/Theme.h"
 #include "ui/widgets/Icons.h"
 #include "ui/widgets/Knob.h"
@@ -66,13 +67,15 @@ RackCard::RackCard(const QString& uid, RackTarget target, int number, const QStr
     : QWidget(parent), uid_(uid), target_(target), accent_(accent) {
     setObjectName("rackCard");
     setAttribute(Qt::WA_StyledBackground, true);
-    // Fixed width: mockup cards are narrow and evenly sized (no stretch).
-    setFixedWidth(236);
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
     buildUi(title, subtitle, number);
 }
 
+RackCard::~RackCard() { closeNativeEditor(); }
+
 void RackCard::buildUi(const QString& title, const QString& subtitle, int number) {
     auto* root = new QVBoxLayout(this);
+    rootLayout_ = root;
     root->setContentsMargins(12, 10, 12, 12);
     root->setSpacing(8);
 
@@ -245,11 +248,49 @@ void RackCard::setStatus(PluginLoadStatus status, const QString& error) {
 
 void RackCard::setCardEnabled(bool enabled) { enabled_ = enabled; }
 
+bool RackCard::openNativeEditor(IPluginInstance* instance) {
+    if (!instance || !instance->hasNativeUi()) return false;
+
+    nativeHost_ = new QWidget(this);
+    nativeHost_->setAttribute(Qt::WA_NativeWindow, true);
+    nativeHost_->setMinimumSize(420, 260);
+    nativeHost_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    nativeHost_->setStyleSheet(
+        QString("background: %1; border: none;").arg(theme::kPanelDeep.name()));
+
+    std::string error;
+    if (!Lv2UiHost::instance().openEditor(instance, nativeHost_, error)) {
+        nativeHost_->deleteLater();
+        nativeHost_ = nullptr;
+        if (statusLabel_) {
+            statusLabel_->setText(tr("Native LSP UI unavailable; showing rack controls"));
+            statusLabel_->setToolTip(QString::fromStdString(error));
+            statusLabel_->setVisible(true);
+        }
+        return false;
+    }
+
+    nativeInstance_ = instance;
+    rootLayout_->insertWidget(3, nativeHost_);
+    if (graphHost_) graphHost_->hide();
+    if (knobsHost_) knobsHost_->hide();
+    return true;
+}
+
+void RackCard::closeNativeEditor() {
+    if (nativeInstance_) {
+        Lv2UiHost::instance().closeEditor(nativeInstance_);
+        nativeInstance_ = nullptr;
+    }
+    if (nativeHost_) {
+        nativeHost_->hide();
+        nativeHost_->deleteLater();
+        nativeHost_ = nullptr;
+    }
+}
+
 void RackCard::showMenu() {
     QMenu menu(this);
-    QAction* edit = menu.addAction(tr("Edit parameters"));
-    connect(edit, &QAction::triggered, this, [this] { emit editRequested(uid_); });
-    menu.addSeparator();
     QAction* up = menu.addAction(tr("Move up"));
     QAction* down = menu.addAction(tr("Move down"));
     connect(up, &QAction::triggered, this, [this] { emit moveUpRequested(uid_); });

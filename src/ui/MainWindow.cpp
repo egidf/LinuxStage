@@ -1,6 +1,7 @@
 #include "ui/MainWindow.h"
 
 #include <QAction>
+#include <QButtonGroup>
 #include <QClipboard>
 #include <QCloseEvent>
 #include <QComboBox>
@@ -10,6 +11,7 @@
 #include <QFileInfo>
 #include <QFormLayout>
 #include <QFrame>
+#include <QGridLayout>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -31,17 +33,20 @@
 #include <QWindow>
 
 #include <functional>
+#include <array>
+#include <utility>
 
 #include "core/Logger.h"
 #include "core/Paths.h"
 #include "ui/PluginBrowser.h"
-#include "ui/PluginEditor.h"
 #include "ui/PlayerPanel.h"
 #include "ui/RackView.h"
 #include "ui/SessionController.h"
 #include "ui/theme/Theme.h"
+#include "ui/widgets/AudioSpectrumVisualizer.h"
 #include "ui/widgets/Icons.h"
 #include "ui/widgets/LevelMeter.h"
+#include "ui/widgets/MasterVolumeDial.h"
 
 namespace lspa {
 
@@ -49,35 +54,7 @@ namespace {
 
 const int kTabPlayer = 0;
 const int kTabRack = 1;
-const int kTabPlaylist = 2;
-const int kTabSettings = 3;
-
-// Rounded chip in the chrome bar, optionally with a leading platform icon.
-QWidget* makeChip(const QString& text, const QColor& color, bool active,
-                  const QString& iconName = QString()) {
-    auto* chip = new QWidget();
-    auto* lay = new QHBoxLayout(chip);
-    lay->setContentsMargins(11, 4, 12, 4);
-    lay->setSpacing(6);
-    chip->setStyleSheet(
-        QString("QWidget { background-color: %1; border: 1px solid %2;"
-                " border-radius: 6px; }")
-            .arg(active ? QColor(31, 111, 235, 60).name(QColor::HexArgb) : theme::kPanelAlt.name(),
-                 active ? color.name() : theme::kBorder.name()));
-    if (!iconName.isEmpty()) {
-        auto* icon = new QLabel(chip);
-        icon->setPixmap(icons::pixmap(iconName == QLatin1String("linux") ? icons::Icon::Linux
-                                                                        : icons::Icon::Windows,
-                                      active ? theme::kText : theme::kTextDim, 14));
-        lay->addWidget(icon);
-    }
-    auto* label = new QLabel(text, chip);
-    label->setStyleSheet(
-        QString("color: %1; font-size: 12px; background: transparent; border: none;")
-            .arg(active ? QColor(255, 255, 255).name() : theme::kTextDim.name()));
-    lay->addWidget(label);
-    return chip;
-}
+const int kTabSettings = 2;
 
 }  // namespace
 
@@ -111,6 +88,35 @@ MainWindow::MainWindow(SessionController* controller, QWidget* parent)
                         .arg(isError ? theme::kWarn.name() : theme::kTextDim.name()));
                 messageLabel_->setVisible(!text.isEmpty());
             });
+    connect(mainPanel_, &PlayerPanel::statusHint, this, [this](const QString& text) {
+        messageLabel_->setText(text);
+        messageLabel_->setStyleSheet(QString("color: %1; font-size: 12px;")
+                                         .arg(theme::kTextDim.name()));
+        messageLabel_->setVisible(true);
+    });
+    connect(bgmPanel_, &PlayerPanel::statusHint, this, [this](const QString& text) {
+        messageLabel_->setText(text);
+        messageLabel_->setStyleSheet(QString("color: %1; font-size: 12px;")
+                                         .arg(theme::kTextDim.name()));
+        messageLabel_->setVisible(true);
+    });
+    auto clearCueState = [](QPushButton* button) {
+        button->setChecked(false);
+        button->setEnabled(true);
+    };
+    connect(mainPanel_, &PlayerPanel::autoCueFinished, this,
+            [this, clearCueState] { clearCueState(mainCueButton_); });
+    connect(bgmPanel_, &PlayerPanel::autoCueFinished, this,
+            [this, clearCueState] { clearCueState(bgmCueButton_); });
+    auto volumeFinished = [this] {
+        if (--autoVolumeJobsRemaining_ <= 0) {
+            autoVolumeJobsRemaining_ = 0;
+            autoVolumeButton_->setChecked(false);
+            autoVolumeButton_->setEnabled(true);
+        }
+    };
+    connect(mainPanel_, &PlayerPanel::autoVolumeFinished, this, volumeFinished);
+    connect(bgmPanel_, &PlayerPanel::autoVolumeFinished, this, volumeFinished);
     connect(controller_, &SessionController::audioRestarted, this, [this] {
         rateCombo_->setCurrentText(QString::number(engine_->config().sampleRate));
         bufferCombo_->setCurrentText(QString::number(engine_->config().blockSize));
@@ -118,8 +124,10 @@ MainWindow::MainWindow(SessionController* controller, QWidget* parent)
     });
 
     connect(rackView_, &RackView::addPluginRequested, this,
-            [this] { browser_->focusSearch(); });
-    connect(rackView_, &RackView::editPluginRequested, this, &MainWindow::openEditorFor);
+            [this] {
+                setTab(kTabRack);
+                browser_->focusSearch();
+            });
     connect(rackView_, &RackView::targetSelected, this, [this](RackTarget target) {
         rackChipMain_->setChecked(target == RackTarget::MainPlayer);
         rackChipBgm_->setChecked(target == RackTarget::BgmPlayer);
@@ -130,14 +138,17 @@ MainWindow::MainWindow(SessionController* controller, QWidget* parent)
     // keyboard shortcuts
     // NOTE: "Space" for Main play/pause lives in the Playback menu action only
     // (a duplicate QShortcut here caused "Ambiguous shortcut overload").
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < tabButtons_.size(); ++i) {
         auto* sc = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_1 + i), this);
         connect(sc, &QShortcut::activated, this, [this, i] { setTab(i); });
     }
 
     auto* statusTimer = new QTimer(this);
     statusTimer->setInterval(400);
-    connect(statusTimer, &QTimer::timeout, this, &MainWindow::updateStatusBar);
+    connect(statusTimer, &QTimer::timeout, this, [this] {
+        updateStatusBar();
+        updateBgmAfterMainEnd();
+    });
     statusTimer->start();
 
     auto* messageTimer = new QTimer(this);
@@ -211,7 +222,6 @@ void MainWindow::buildChrome() {
 
     tabButtons_.push_back(makeTabButton(tr("Player"), "player", kTabPlayer));
     tabButtons_.push_back(makeTabButton(tr("Effects Rack"), "rack", kTabRack));
-    tabButtons_.push_back(makeTabButton(tr("Playlist"), "playlist", kTabPlaylist));
     tabButtons_.push_back(makeTabButton(tr("Settings"), "settings", kTabSettings));
     const QString sepStyle = QString("background-color: %1;").arg(theme::kBorder.name());
     for (int i = 0; i < tabButtons_.size(); ++i) {
@@ -226,8 +236,62 @@ void MainWindow::buildChrome() {
     }
     lay->addStretch(1);
 
-    lay->addWidget(makeChip(tr("Linux"), theme::kAccent, true, "linux"));
-    lay->addWidget(makeChip(tr("Windows"), theme::kTextDim, false, "windows"));
+    auto makeActionButton = [&](const QString& text, const QString& tooltip,
+                                const QColor& activeColor) {
+        auto* button = new QPushButton(text, chrome_);
+        button->setCheckable(true);
+        button->setToolTip(tooltip);
+        button->setCursor(Qt::PointingHandCursor);
+        button->setStyleSheet(
+            QString("QPushButton { background: %1; color: %2; border: 1px solid %3;"
+                    " border-radius: 6px; padding: 5px 10px; font-size: 11px; }"
+                    "QPushButton:hover { background: %4; border-color: %5; }"
+                    "QPushButton:checked { background: %6; color: #10151B;"
+                    " border-color: %6; font-weight: 700; }"
+                    "QPushButton:checked:disabled { background: %6; color: #10151B;"
+                    " border-color: %6; font-weight: 700; }")
+                .arg(theme::kPanelAlt.name(), theme::kText.name(), theme::kBorder.name(),
+                     theme::kPanelAlt.lighter(118).name(), activeColor.name(), activeColor.name()));
+        return button;
+    };
+    autoVolumeButton_ = makeActionButton(
+        tr("Auto Volume"), tr("Analyze every track and balance their playback loudness"),
+        QColor(255, 188, 91));
+    connect(autoVolumeButton_, &QPushButton::clicked, this, [this](bool checked) {
+        if (!checked) {
+            autoVolumeButton_->setChecked(true);
+            return;
+        }
+        autoVolumeJobsRemaining_ = 2;
+        autoVolumeButton_->setEnabled(false);
+        mainPanel_->autoNormalizePlaylist();
+        bgmPanel_->autoNormalizePlaylist();
+    });
+    lay->addWidget(autoVolumeButton_);
+    mainCueButton_ = makeActionButton(
+        tr("Auto Cue Main"), tr("Find the first audible point in the Main Player track"),
+        QColor(81, 190, 255));
+    connect(mainCueButton_, &QPushButton::clicked, this, [this](bool checked) {
+        if (!checked) {
+            mainCueButton_->setChecked(true);
+            return;
+        }
+        mainCueButton_->setEnabled(false);
+        mainPanel_->autoCue();
+    });
+    lay->addWidget(mainCueButton_);
+    bgmCueButton_ = makeActionButton(
+        tr("Auto Cue BGM"), tr("Find the first audible point in the BGM Player track"),
+        QColor(70, 220, 181));
+    connect(bgmCueButton_, &QPushButton::clicked, this, [this](bool checked) {
+        if (!checked) {
+            bgmCueButton_->setChecked(true);
+            return;
+        }
+        bgmCueButton_->setEnabled(false);
+        bgmPanel_->autoCue();
+    });
+    lay->addWidget(bgmCueButton_);
 
     // Hamburger button carrying the old menu bar contents.
     menuButton_ = new QToolButton(chrome_);
@@ -437,6 +501,107 @@ void MainWindow::buildContent() {
     // Natural height: the panel sizes to its content (like the mockup's
     // 873x350 panel); the rack below absorbs the remaining window space.
     root->addWidget(playersRow_);
+
+    playerToolsRow_ = new QWidget(central);
+    auto* toolsLayout = new QHBoxLayout(playerToolsRow_);
+    toolsLayout->setContentsMargins(0, 0, 0, 0);
+    toolsLayout->setSpacing(12);
+
+    auto* visualPanel = new QWidget(playerToolsRow_);
+    visualPanel->setAttribute(Qt::WA_StyledBackground, true);
+    visualPanel->setObjectName("playerVisualizerPanel");
+    visualPanel->setStyleSheet(
+        QString("QWidget#playerVisualizerPanel { background: %1; border: 1px solid %2;"
+                " border-radius: 12px; }")
+            .arg(theme::kPanel.name(), theme::kBorder.name()));
+    auto* visualLayout = new QVBoxLayout(visualPanel);
+    visualLayout->setContentsMargins(14, 10, 14, 14);
+    visualLayout->setSpacing(8);
+    auto* visualHeader = new QHBoxLayout();
+    auto* visualTitle = new QLabel(tr("LIVE AUDIO SPECTRUM"), visualPanel);
+    visualTitle->setStyleSheet(
+        QString("color: %1; font-size: 11px; font-weight: 700; background: transparent;")
+            .arg(theme::kTextDim.name()));
+    visualHeader->addWidget(visualTitle);
+    visualHeader->addStretch(1);
+    auto* channelLabel = new QLabel(tr("MASTER OUTPUT  /  STEREO"), visualPanel);
+    channelLabel->setStyleSheet(
+        QString("color: %1; font-size: 10px; background: transparent;")
+            .arg(theme::kTextFaint.name()));
+    visualHeader->addWidget(channelLabel);
+    visualLayout->addLayout(visualHeader);
+    spectrumVisualizer_ = new AudioSpectrumVisualizer(engine_, visualPanel);
+    visualLayout->addWidget(spectrumVisualizer_, 1);
+    toolsLayout->addWidget(visualPanel, 1);
+
+    auto* masterPanel = new QWidget(playerToolsRow_);
+    masterPanel->setAttribute(Qt::WA_StyledBackground, true);
+    masterPanel->setObjectName("masterVolumePanel");
+    masterPanel->setStyleSheet(
+        QString("QWidget#masterVolumePanel { background: %1; border: 1px solid %2;"
+                " border-radius: 12px; }")
+            .arg(theme::kPanel.name(), theme::kBorder.name()));
+    masterPanel->setFixedWidth(286);
+    auto* masterLayout = new QVBoxLayout(masterPanel);
+    masterLayout->setContentsMargins(12, 10, 12, 12);
+    masterLayout->setSpacing(4);
+    auto* masterTitle = new QLabel(tr("MASTER VOLUME"), masterPanel);
+    masterTitle->setAlignment(Qt::AlignCenter);
+    masterTitle->setStyleSheet(
+        QString("color: %1; font-size: 11px; font-weight: 700; background: transparent;")
+            .arg(theme::kTextDim.name()));
+    masterLayout->addWidget(masterTitle);
+
+    auto* presetTitle = new QLabel(tr("SOUND PRESET  /  PRE-MASTER"), masterPanel);
+    presetTitle->setStyleSheet(
+        QString("color: %1; font-size: 9px; font-weight: 700; background: transparent;")
+            .arg(theme::kTextFaint.name()));
+    masterLayout->addWidget(presetTitle);
+    auto* presetGrid = new QGridLayout();
+    presetGrid->setContentsMargins(0, 0, 0, 0);
+    presetGrid->setHorizontalSpacing(5);
+    presetGrid->setVerticalSpacing(4);
+    auto* presetGroup = new QButtonGroup(masterPanel);
+    presetGroup->setExclusive(true);
+    const std::array<std::pair<QString, SoundPreset>, 6> presets = {{
+        {tr("Universal"), SoundPreset::Universal},
+        {tr("Clarity"), SoundPreset::Clarity},
+        {tr("Tape"), SoundPreset::Tape},
+        {tr("Cinematic"), SoundPreset::Cinematic},
+        {tr("Dolby Surround"), SoundPreset::DolbySurround},
+        {tr("Sony 360 Reality Audio"), SoundPreset::Sony360RealityAudio},
+    }};
+    for (size_t i = 0; i < presets.size(); ++i) {
+        const auto& [name, preset] = presets[i];
+        auto* button = new QPushButton(name, masterPanel);
+        button->setCheckable(true);
+        button->setToolTip(
+            preset == SoundPreset::DolbySurround || preset == SoundPreset::Sony360RealityAudio
+                ? tr("Stereo spatialization effect; not a certified format decoder")
+                : tr("Apply the %1 tone profile before master volume").arg(name));
+        button->setStyleSheet(
+            QString("QPushButton { background: %1; color: %2; border: 1px solid %3;"
+                    " border-radius: 5px; padding: 4px 3px; min-height: 20px;"
+                    " font-size: 9px; }"
+                    "QPushButton:checked { background: %4; color: #10151B;"
+                    " border-color: %4; font-weight: 700; }")
+                .arg(theme::kPanelDeep.name(), theme::kTextDim.name(), theme::kBorder.name(),
+                     theme::kAccent.name()));
+        presetGroup->addButton(button, static_cast<int>(preset));
+        presetGrid->addWidget(button, static_cast<int>(i / 2), static_cast<int>(i % 2));
+        connect(button, &QPushButton::toggled, this, [this, preset](bool checked) {
+            if (checked) engine_->setSoundPreset(preset);
+        });
+        if (preset == engine_->soundPreset()) button->setChecked(true);
+    }
+    masterLayout->addLayout(presetGrid);
+
+        masterVolumeDial_ = new MasterVolumeDial(engine_->masterVolume(), masterPanel);
+        connect(masterVolumeDial_, &MasterVolumeDial::gainChanged, this,
+            [this](float gain) { engine_->setMasterVolume(gain); });
+        masterLayout->addWidget(masterVolumeDial_, 1, Qt::AlignHCenter);
+    toolsLayout->addWidget(masterPanel);
+    root->addWidget(playerToolsRow_, 2);
 
     // rack row
     rackRow_ = new QWidget(central);
@@ -788,7 +953,7 @@ void MainWindow::buildMenus() {
     addTransport(tr("BGM: Stop"), "Ctrl+S", [](Player& p) { p.stop(); }, PlayerId::Bgm);
 
     auto* viewMenu = menu->addMenu(tr("&View"));
-    const QStringList views = {tr("Player"), tr("Effects Rack"), tr("Playlist"), tr("Settings")};
+    const QStringList views = {tr("Player"), tr("Effects Rack"), tr("Settings")};
     for (int i = 0; i < views.size(); ++i) {
         viewMenu->addAction(views[i], this, [this, i] { setTab(i); });
     }
@@ -836,10 +1001,12 @@ void MainWindow::setTab(int index) {
     syncTabButtons();
     const bool isSettings = index == kTabSettings;
     settingsPage_->setVisible(isSettings);
-    const bool showPlayers = (index == kTabPlayer || index == kTabPlaylist);
-    const bool showRack = (index == kTabPlayer || index == kTabRack);
+    const bool showPlayers = index == kTabPlayer;
+    const bool showRack = index == kTabRack;
     playersRow_->setVisible(showPlayers);
     rackRow_->setVisible(showRack);
+    browser_->setVisible(showRack);
+    playerToolsRow_->setVisible(index == kTabPlayer);
     if (isSettings) refreshLogView();
 }
 
@@ -849,45 +1016,21 @@ void MainWindow::syncTabButtons() {
     }
 }
 
+void MainWindow::updateBgmAfterMainEnd() {
+    const PlayerSnapshot main = engine_->player(PlayerId::Main).snapshot();
+    if (main.state == PlayerState::Playing) {
+        bgmStartedAfterMain_ = false;
+        return;
+    }
+    if (!main.ended || bgmStartedAfterMain_) return;
+    if (engine_->player(PlayerId::Bgm).playlist().empty()) return;
+    bgmStartedAfterMain_ = true;
+    bgmPanel_->startBgmAfterMain();
+}
+
 void MainWindow::onCatalogOrRackChanged() {
-    // A rack rebuild invalidates any open native editors (the plugin instances
-    // they point at are replaced).
-    closeEditors();
     rackView_->reload();
     browser_->refresh();
-}
-
-void MainWindow::openEditorFor(RackTarget target, const QString& uid) {
-    for (PluginEditor* e : editors_) {
-        if (e->uid() == uid) {
-            e->raise();
-            e->activateWindow();
-            return;
-        }
-    }
-    QString title = tr("Effect");
-    for (const RackSlotInfo& slot : controller_->rackInfo(target)) {
-        if (QString::fromStdString(slot.uid) == uid) {
-            title = slot.displayName.isEmpty() ? QString::fromStdString(slot.key.id)
-                                               : slot.displayName;
-            break;
-        }
-    }
-    auto* editor = new PluginEditor(controller_, target, uid, title, this);
-    editors_.push_back(editor);
-    connect(editor, &QObject::destroyed, this, [this, editor] {
-        editors_.removeAll(editor);
-    });
-    editor->show();
-    editor->raise();
-}
-
-void MainWindow::closeEditors() {
-    const QVector<PluginEditor*> copy = editors_;
-    for (PluginEditor* e : copy) {
-        e->close();  // WA_DeleteOnClose -> deleteLater
-    }
-    editors_.clear();
 }
 
 // ---------------------------------------------------------------------------
@@ -954,7 +1097,7 @@ void MainWindow::updateStatusBar() {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
-    closeEditors();
+    rackView_->closeNativeEditors();
     QString err;
     controller_->save(&err);
     engine_->stop();

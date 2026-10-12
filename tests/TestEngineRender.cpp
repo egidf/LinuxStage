@@ -3,6 +3,7 @@
 #include <sndfile.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <thread>
 #include <vector>
@@ -88,6 +89,26 @@ RenderStats analyze(const std::string& path, double fromSec = 0.0,
     return stats;
 }
 
+double toneAmplitude(const std::string& path, double frequency, double fromSec) {
+    std::string error;
+    auto decoder = openSndfileDecoder(path, error);
+    if (!decoder) return 0.0;
+    decoder->seek(static_cast<int64_t>(fromSec * decoder->sampleRate()));
+    constexpr int count = 8192;
+    std::vector<float> left(count), right(count);
+    const int frames = decoder->read(left.data(), right.data(), count);
+    if (frames <= 0) return 0.0;
+    double real = 0.0;
+    double imaginary = 0.0;
+    for (int i = 0; i < frames; ++i) {
+        const double sample = 0.5 * (left[static_cast<size_t>(i)] + right[static_cast<size_t>(i)]);
+        const double phase = 2.0 * M_PI * frequency * i / decoder->sampleRate();
+        real += sample * std::cos(phase);
+        imaginary -= sample * std::sin(phase);
+    }
+    return 2.0 * std::hypot(real, imaginary) / frames;
+}
+
 }  // namespace
 
 TEST_CASE(OfflineRenderProducesAudio) {
@@ -103,6 +124,8 @@ TEST_CASE(OfflineRenderProducesAudio) {
     CHECK(engine.start(cfg, err));
 
     engine.player(PlayerId::Main).setPlaylist({itemFor(tone)});
+    engine.player(PlayerId::Main).setTrackGain(0, 0.5f);
+    CHECK_NEAR(engine.player(PlayerId::Main).trackGain(0), 0.5f, 1.0e-6);
     FadeConfig f;
     f.fadeInMs = 20;
     f.fadeOutMs = 20;
@@ -114,6 +137,11 @@ TEST_CASE(OfflineRenderProducesAudio) {
     auto sink = createWavSink(out, err);
     CHECK(sink != nullptr);
     CHECK(engine.renderOffline(1.0, *sink, err));
+    std::array<float, AudioEngine::kWaveformSamples> waveform{};
+    CHECK(engine.copyMasterWaveform(waveform));
+    float waveformPeak = 0.0f;
+    for (float sample : waveform) waveformPeak = std::max(waveformPeak, std::fabs(sample));
+    CHECK(waveformPeak > 0.05f);
     engine.stop();
 
     const RenderStats stats = analyze(out, 0.1);
@@ -146,7 +174,61 @@ TEST_CASE(MasterVolumeZeroIsSilent) {
     CHECK(stats.peak < 1e-4f);
 }
 
-TEST_CASE(BothPlayersAreMixed) {
+TEST_CASE(PauseUsesResponsiveTransportFade) {
+    const std::string tone = writeTone("pause_responsive", 2.0, 440.0, 48000);
+    Player player("pause-test", 48000, 256);
+    player.setPlaylist({itemFor(tone)});
+    FadeConfig fade;
+    fade.fadeOutMs = 450.0;
+    player.setFadeConfig(fade);
+    player.play();
+
+    std::vector<float> left(256), right(256);
+    PlayerBlockInfo block;
+    player.pull(left.data(), right.data(), 256, block);
+    player.pause();
+    player.pull(left.data(), right.data(), 256, block);
+    player.pull(left.data(), right.data(), 256, block);
+    CHECK(player.snapshot().state == PlayerState::Paused);
+}
+
+TEST_CASE(ShuffleVisitsEachTrackOnceBeforeRepeating) {
+    const std::string tone = writeTone("shuffle_cycle", 1.0, 440.0, 48000);
+    Player player("shuffle-test", 48000, 256);
+    std::vector<PlaylistItem> items(4, itemFor(tone));
+    player.setPlaylist(std::move(items));
+    player.selectIndex(0);
+    player.setShuffleEnabled(true);
+
+    std::array<bool, 4> visited{};
+    visited[0] = true;
+    for (int i = 0; i < 3; ++i) {
+        player.next();
+        const int track = player.snapshot().trackIndex;
+        CHECK(track >= 0 && track < static_cast<int>(visited.size()));
+        CHECK(!visited[static_cast<size_t>(track)]);
+        visited[static_cast<size_t>(track)] = true;
+    }
+    for (bool wasVisited : visited) CHECK(wasVisited);
+}
+
+TEST_CASE(RepeatAndSoundPresetModesCanBeSelected) {
+    Player player("mode-test", 48000, 256);
+    player.setShuffleEnabled(true);
+    player.setRepeatEnabled(true);
+    CHECK(player.shuffleEnabled());
+    CHECK(player.repeatEnabled());
+    player.setShuffleEnabled(false);
+    player.setRepeatEnabled(false);
+    CHECK(!player.shuffleEnabled());
+    CHECK(!player.repeatEnabled());
+
+    AudioEngine engine;
+    engine.setSoundPreset(SoundPreset::Tape);
+    CHECK(engine.soundPreset() == SoundPreset::Tape);
+}
+
+TEST_CASE(MainPlaybackSuppressesBgmUntilMainStops) {
     const std::string main = writeTone("render_mix_main", 3.0, 440.0, 48000);
     const std::string bgm = writeTone("render_mix_bgm", 3.0, 660.0, 48000);
 
@@ -179,7 +261,93 @@ TEST_CASE(BothPlayersAreMixed) {
     const RenderStats mainOnly = analyze("/tmp/opencode/render_main_only.wav", 0.1);
     const RenderStats both = analyze("/tmp/opencode/render_both.wav", 0.1);
     CHECK(mainOnly.rms > 0.05);
-    CHECK(both.rms > mainOnly.rms * 1.3);
+    CHECK(both.rms < mainOnly.rms * 1.1);
+    CHECK(toneAmplitude("/tmp/opencode/render_both.wav", 440.0, 0.1) > 0.2);
+    CHECK(toneAmplitude("/tmp/opencode/render_both.wav", 660.0, 0.1) < 0.02);
+}
+
+TEST_CASE(StartingBgmDoesNotMuteMainPlayer) {
+    const std::string main = writeTone("render_main_keeps_playing", 4.0, 440.0, 48000);
+    const std::string bgm = writeTone("render_bgm_starts_later", 4.0, 880.0, 48000);
+    AudioEngine engine;
+    EngineConfig cfg;
+    cfg.offline = true;
+    std::string err;
+    CHECK(engine.start(cfg, err));
+    FadeConfig mainFade;
+    mainFade.fadeInMs = 10.0;
+    mainFade.fadeOutMs = 10.0;
+    engine.player(PlayerId::Main).setFadeConfig(mainFade);
+    FadeConfig bgmFade;
+    bgmFade.fadeInMs = 100.0;
+    bgmFade.fadeOutMs = 800.0;
+    engine.player(PlayerId::Bgm).setFadeConfig(bgmFade);
+    engine.player(PlayerId::Main).setPlaylist({itemFor(main)});
+    engine.player(PlayerId::Bgm).setPlaylist({itemFor(bgm)});
+    engine.player(PlayerId::Main).play();
+    std::this_thread::sleep_for(std::chrono::milliseconds(120));
+
+    auto beforeSink = createWavSink("/tmp/opencode/main_before_bgm.wav", err);
+    CHECK(beforeSink != nullptr);
+    CHECK(engine.renderOffline(0.25, *beforeSink, err));
+    engine.player(PlayerId::Bgm).setMuted(false);
+    engine.player(PlayerId::Bgm).play();
+    std::this_thread::sleep_for(std::chrono::milliseconds(120));
+
+    auto afterSink = createWavSink("/tmp/opencode/main_after_bgm.wav", err);
+    CHECK(afterSink != nullptr);
+    CHECK(engine.renderOffline(0.5, *afterSink, err));
+    CHECK(engine.player(PlayerId::Main).snapshot().state == PlayerState::Playing);
+    CHECK(!engine.player(PlayerId::Main).muted());
+    engine.stop();
+
+    const RenderStats before = analyze("/tmp/opencode/main_before_bgm.wav", 0.05);
+    const RenderStats after = analyze("/tmp/opencode/main_after_bgm.wav", 0.1);
+    CHECK(before.rms > 0.05);
+    CHECK(after.rms > before.rms * 0.8);
+    CHECK(toneAmplitude("/tmp/opencode/main_before_bgm.wav", 440.0, 0.05) > 0.2);
+    CHECK(toneAmplitude("/tmp/opencode/main_after_bgm.wav", 440.0, 0.1) > 0.2);
+}
+
+TEST_CASE(BgmMuteFollowsMainTransportWhileBgmKeepsPlaying) {
+    const std::string main = writeTone("render_main_priority", 4.0, 440.0, 48000);
+    const std::string bgm = writeTone("render_bgm_priority", 4.0, 880.0, 48000);
+    AudioEngine engine;
+    EngineConfig cfg;
+    cfg.offline = true;
+    std::string err;
+    CHECK(engine.start(cfg, err));
+    FadeConfig mainFade;
+    mainFade.fadeInMs = 10.0;
+    mainFade.fadeOutMs = 10.0;
+    engine.player(PlayerId::Main).setFadeConfig(mainFade);
+    FadeConfig bgmFade;
+    bgmFade.fadeInMs = 100.0;
+    bgmFade.fadeOutMs = 800.0;
+    engine.player(PlayerId::Bgm).setFadeConfig(bgmFade);
+    engine.player(PlayerId::Main).setPlaylist({itemFor(main)});
+    engine.player(PlayerId::Bgm).setPlaylist({itemFor(bgm)});
+    engine.player(PlayerId::Main).play();
+    engine.player(PlayerId::Bgm).play();
+    std::this_thread::sleep_for(std::chrono::milliseconds(120));
+
+    auto duringMain = createWavSink("/tmp/opencode/bgm_gated_during_main.wav", err);
+    CHECK(duringMain != nullptr);
+    CHECK(engine.renderOffline(0.3, *duringMain, err));
+    CHECK(toneAmplitude("/tmp/opencode/bgm_gated_during_main.wav", 440.0, 0.08) > 0.2);
+    CHECK(toneAmplitude("/tmp/opencode/bgm_gated_during_main.wav", 880.0, 0.08) < 0.02);
+    CHECK(engine.player(PlayerId::Main).snapshot().state == PlayerState::Playing);
+    CHECK(engine.player(PlayerId::Bgm).snapshot().positionFrames > 0);
+    CHECK(engine.player(PlayerId::Bgm).muted());
+
+    engine.player(PlayerId::Main).stop();
+    auto afterMain = createWavSink("/tmp/opencode/bgm_audible_after_main.wav", err);
+    CHECK(afterMain != nullptr);
+    CHECK(engine.renderOffline(0.4, *afterMain, err));
+    CHECK(!engine.player(PlayerId::Bgm).muted());
+    engine.stop();
+    CHECK(toneAmplitude("/tmp/opencode/bgm_audible_after_main.wav", 880.0, 0.15) > 0.2);
+    CHECK(toneAmplitude("/tmp/opencode/bgm_audible_after_main.wav", 440.0, 0.15) < 0.02);
 }
 
 TEST_CASE(FadeInSilencesTheStart) {

@@ -346,6 +346,11 @@ void SessionController::togglePlugin(RackTarget target, const QString& uid, bool
     }
 }
 
+void SessionController::setPlayerFade(PlayerId id, const FadeConfig& fade) {
+    configFor(id).fade = fade;
+    engine_->player(id).setFadeConfig(fade);
+}
+
 void SessionController::setParameter(RackTarget target, const QString& uid,
                                      const QString& symbol, float value) {
     PlayerConfig& cfg = configFor(target);
@@ -375,6 +380,7 @@ void SessionController::rebuildAllRacks() {
 }
 
 void SessionController::rebuildRackInternal(RackTarget target) {
+    emit rackAboutToChange(target);
     PlayerConfig& cfg = configFor(target);
     auto& catalog = PluginCatalog::instance();
 

@@ -335,6 +335,9 @@ std::vector<PluginDescriptor> Lv2Host::scan() {
             ++loggedWarnings;
             LSPA_LOG_WARN("Lv2Host: %s: %s", d.key.id.c_str(), d.warning.c_str());
         }
+        if (!isLspPluginDescriptor(d)) {
+            continue;
+        }
         out.push_back(std::move(d));
     }
 

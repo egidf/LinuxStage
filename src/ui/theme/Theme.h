@@ -7,22 +7,23 @@
 
 namespace lspa::theme {
 
-// Base palette
-inline const QColor kWindow(4, 11, 19);          // #040B13 app background (mockup)
-inline const QColor kPanel(22, 27, 34);         // #161B22 panels
-inline const QColor kPanelAlt(30, 36, 45);      // #1E242D cards / list rows
-inline const QColor kPanelDeep(16, 21, 27);     // inner wells
-inline const QColor kBorder(48, 57, 71);        // #303947 borders
-inline const QColor kBorderSoft(38, 46, 58);
-inline const QColor kText(230, 237, 243);       // #E6EDF3
-inline const QColor kTextDim(139, 148, 158);    // #8B949E
-inline const QColor kTextFaint(92, 102, 116);
+// Base palette tuned for the LSP plugin family look: dark charcoal surfaces,
+// warm orange accents, and muted teal highlights, while keeping the Linux Stage app shell.
+inline const QColor kWindow(9, 12, 18);          // #090C12
+inline const QColor kPanel(21, 25, 31);           // dark panel surface
+inline const QColor kPanelAlt(31, 36, 44);        // cards / elevated rows
+inline const QColor kPanelDeep(13, 16, 22);       // inner wells
+inline const QColor kBorder(58, 63, 72);          // subtle separators
+inline const QColor kBorderSoft(45, 51, 60);
+inline const QColor kText(234, 238, 244);          // light text
+inline const QColor kTextDim(148, 155, 168);       // secondary text
+inline const QColor kTextFaint(110, 120, 136);
 
-// Accents: Main Player = blue, BGM Player = green (see mockup)
-inline const QColor kAccent(56, 139, 253);      // #388BFD
-inline const QColor kAccentDark(36, 106, 210);
-inline const QColor kAccent2(63, 220, 168);     // #3FDCA8
-inline const QColor kAccent2Dark(38, 170, 128);
+// LSP-inspired accent palette: warm orange primary, teal secondary.
+inline const QColor kAccent(255, 138, 61);        // #FF8A3D
+inline const QColor kAccentDark(197, 99, 42);
+inline const QColor kAccent2(70, 196, 181);       // #46C4B5
+inline const QColor kAccent2Dark(42, 149, 138);
 
 // Status
 inline const QColor kOk(63, 220, 168);

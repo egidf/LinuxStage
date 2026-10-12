@@ -4,6 +4,7 @@
 #pragma once
 
 #include <QWidget>
+#include <thread>
 
 #include <QColor>
 #include <QVector>
@@ -32,15 +33,21 @@ class PlayerPanel : public QWidget {
 public:
     PlayerPanel(PlayerId id, AudioEngine* engine, SessionController* controller,
                 QWidget* parent = nullptr);
+    ~PlayerPanel() override;
 
     PlayerId playerId() const { return id_; }
 
     void refreshPlaylist();
     void refreshNow();
+    void autoCue();
+    void autoNormalizePlaylist();
+    void startBgmAfterMain();
 
 signals:
     void rackEditRequested(lspa::RackTarget target);
     void statusHint(const QString& text);
+    void autoCueFinished();
+    void autoVolumeFinished();
 
 private slots:
     void onAddFiles();
@@ -50,12 +57,15 @@ private slots:
     void onSeek(double fraction);
     void onVolumeChanged(int value);
     void onMuteToggled();
+    void adjustFade(bool fadeIn, double deltaMs);
+    void refreshFadeControls();
 
 private:
     void buildUi();
     void updateTransport(const PlayerSnapshot& snap);
     void updateMetadata(const PlayerSnapshot& snap);
     void updatePlaylistHighlight(const PlayerSnapshot& snap);
+    void updateVolumeControls();
     void computePeaksFor(const QString& path);
     static QString formatTime(double seconds);
     static QString formatTimePadded(double seconds);
@@ -71,7 +81,8 @@ private:
     QLabel* titleLabel_ = nullptr;
     QLabel* statusDot_ = nullptr;
     QLabel* statusLabel_ = nullptr;
-    QComboBox* outputCombo_ = nullptr;
+    QLabel* fadeInValue_ = nullptr;
+    QLabel* fadeOutValue_ = nullptr;
 
     // now playing
     AlbumArt* art_ = nullptr;
@@ -98,6 +109,7 @@ private:
 
     // waveform peaks worker
     std::atomic<uint64_t> peaksJobId_{0};
+    std::thread normalizeWorker_;
     QString currentWaveformPath_;
     Player& p();
 };
