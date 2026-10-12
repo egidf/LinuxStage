@@ -1,0 +1,38 @@
+{
+	"BUILD_DIR" : "/home/egidf/Linux_Stage_Audio/build/lsp-audio-player_autogen",
+	"CMAKE_BINARY_DIR" : "/home/egidf/Linux_Stage_Audio/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/egidf/Linux_Stage_Audio/build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/egidf/Linux_Stage_Audio",
+	"CMAKE_SOURCE_DIR" : "/home/egidf/Linux_Stage_Audio",
+	"CROSS_CONFIG" : false,
+	"GENERATOR" : "Ninja",
+	"INCLUDE_DIR" : "/home/egidf/Linux_Stage_Audio/build/lsp-audio-player_autogen/include",
+	"INPUTS" : 
+	[
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/expand_more_g.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/volume_up.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/volume_off.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/format_list_bulleted.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/pause.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/delete.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/repeat.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/expand_more.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/skip_next.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/shuffle.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/add.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/play_arrow.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/image.svg",
+		"/home/egidf/Linux_Stage_Audio/src/ui/resources/material/skip_previous.svg"
+	],
+	"LOCK_FILE" : "/home/egidf/Linux_Stage_Audio/build/CMakeFiles/lsp-audio-player_autogen.dir/AutoRcc_material_DOHTCAYJZN_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "-name", "material" ],
+	"OUTPUT_CHECKSUM" : "DOHTCAYJZN",
+	"OUTPUT_NAME" : "qrc_material.cpp",
+	"RCC_EXECUTABLE" : "/home/egidf/Qt/6.8.3/gcc_64/libexec/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/home/egidf/Linux_Stage_Audio/build/CMakeFiles/lsp-audio-player_autogen.dir/AutoRcc_material_DOHTCAYJZN_Used.txt",
+	"SOURCE" : "/home/egidf/Linux_Stage_Audio/src/ui/resources/material.qrc",
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

@@ -1,0 +1,40 @@
+Start testing: Oct 12 12:23 WIB
+----------------------------------------------------------
+1/1 Testing: lspa_tests
+1/1 Test: lspa_tests
+Command: "/home/egidf/Linux_Stage_Audio/build/lspa_tests"
+Directory: /home/egidf/Linux_Stage_Audio/build
+"lspa_tests" start time: Oct 12 12:23 WIB
+Output:
+----------------------------------------------------------
+[ OK ] RingBufferBasicReadWrite
+[ OK ] RingBufferCapacityLimit
+[ OK ] RingBufferWrapAround
+[ OK ] RingBufferProducerFlush
+[ OK ] RingBufferConsumerFlush
+[ OK ] NextPow2
+[ OK ] FadeInRampsSmoothly
+[ OK ] FadeOutOnStopReachesSilence
+[ OK ] PauseResumeKeepsPosition
+[ OK ] SeekJumpsWithoutDrift
+[ OK ] SessionJsonRoundTrip
+[ OK ] SessionRejectsCorruptJson
+[ OK ] SessionRejectsNewerSchema
+[ OK ] SessionRejectsMissingVersion
+[ OK ] RackPresetRoundTrip
+[ OK ] SessionFileRoundTrip
+[ OK ] OfflineRenderProducesAudio
+[ OK ] MasterVolumeZeroIsSilent
+[ OK ] BothPlayersAreMixed
+[ OK ] FadeInSilencesTheStart
+
+20 passed, 0 failed
+<end of output>
+Test time =   1.52 sec
+----------------------------------------------------------
+Test Passed.
+"lspa_tests" end time: Oct 12 12:23 WIB
+"lspa_tests" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 12 12:23 WIB

@@ -1,0 +1,242 @@
+[
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/lspa_core_autogen/mocs_compilation.cpp.o -c /home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/mocs_compilation.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/mocs_compilation.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/lspa_core_autogen/mocs_compilation.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/core/Logger.cpp.o -c /home/egidf/Linux_Stage_Audio/src/core/Logger.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/core/Logger.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/core/Logger.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/core/Paths.cpp.o -c /home/egidf/Linux_Stage_Audio/src/core/Paths.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/core/Paths.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/core/Paths.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/core/Session.cpp.o -c /home/egidf/Linux_Stage_Audio/src/core/Session.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/core/Session.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/core/Session.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/engine/SndfileDecoder.cpp.o -c /home/egidf/Linux_Stage_Audio/src/engine/SndfileDecoder.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/engine/SndfileDecoder.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/engine/SndfileDecoder.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/engine/Player.cpp.o -c /home/egidf/Linux_Stage_Audio/src/engine/Player.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/engine/Player.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/engine/Player.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/engine/EffectChain.cpp.o -c /home/egidf/Linux_Stage_Audio/src/engine/EffectChain.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/engine/EffectChain.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/engine/EffectChain.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/engine/AudioEngine.cpp.o -c /home/egidf/Linux_Stage_Audio/src/engine/AudioEngine.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/engine/AudioEngine.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/engine/AudioEngine.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/engine/AlsaOutput.cpp.o -c /home/egidf/Linux_Stage_Audio/src/engine/AlsaOutput.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/engine/AlsaOutput.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/engine/AlsaOutput.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_core_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/opus -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_core.dir/src/engine/WavWriter.cpp.o -c /home/egidf/Linux_Stage_Audio/src/engine/WavWriter.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/engine/WavWriter.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_core.dir/src/engine/WavWriter.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/lilv-0 -isystem /usr/include/serd-0 -isystem /usr/include/sord-0 -isystem /usr/include/zix-0 -isystem /usr/include/sratom-0 -isystem /usr/include/suil-0 -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_plugins.dir/lspa_plugins_autogen/mocs_compilation.cpp.o -c /home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/mocs_compilation.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/mocs_compilation.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_plugins.dir/lspa_plugins_autogen/mocs_compilation.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/lilv-0 -isystem /usr/include/serd-0 -isystem /usr/include/sord-0 -isystem /usr/include/zix-0 -isystem /usr/include/sratom-0 -isystem /usr/include/suil-0 -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_plugins.dir/src/plugins/PluginCatalog.cpp.o -c /home/egidf/Linux_Stage_Audio/src/plugins/PluginCatalog.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/plugins/PluginCatalog.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_plugins.dir/src/plugins/PluginCatalog.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/lilv-0 -isystem /usr/include/serd-0 -isystem /usr/include/sord-0 -isystem /usr/include/zix-0 -isystem /usr/include/sratom-0 -isystem /usr/include/suil-0 -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_plugins.dir/src/plugins/Lv2Host.cpp.o -c /home/egidf/Linux_Stage_Audio/src/plugins/Lv2Host.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/plugins/Lv2Host.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_plugins.dir/src/plugins/Lv2Host.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/lilv-0 -isystem /usr/include/serd-0 -isystem /usr/include/sord-0 -isystem /usr/include/zix-0 -isystem /usr/include/sratom-0 -isystem /usr/include/suil-0 -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_plugins.dir/src/plugins/Lv2Instance.cpp.o -c /home/egidf/Linux_Stage_Audio/src/plugins/Lv2Instance.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/plugins/Lv2Instance.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_plugins.dir/src/plugins/Lv2Instance.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/lilv-0 -isystem /usr/include/serd-0 -isystem /usr/include/sord-0 -isystem /usr/include/zix-0 -isystem /usr/include/sratom-0 -isystem /usr/include/suil-0 -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_plugins.dir/src/plugins/Lv2Worker.cpp.o -c /home/egidf/Linux_Stage_Audio/src/plugins/Lv2Worker.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/plugins/Lv2Worker.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_plugins.dir/src/plugins/Lv2Worker.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/lilv-0 -isystem /usr/include/serd-0 -isystem /usr/include/sord-0 -isystem /usr/include/zix-0 -isystem /usr/include/sratom-0 -isystem /usr/include/suil-0 -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_plugins.dir/src/plugins/Lv2UiHost.cpp.o -c /home/egidf/Linux_Stage_Audio/src/plugins/Lv2UiHost.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/plugins/Lv2UiHost.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_plugins.dir/src/plugins/Lv2UiHost.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_plugins_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /usr/include/lilv-0 -isystem /usr/include/serd-0 -isystem /usr/include/sord-0 -isystem /usr/include/zix-0 -isystem /usr/include/sratom-0 -isystem /usr/include/suil-0 -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_plugins.dir/src/plugins/UridMap.cpp.o -c /home/egidf/Linux_Stage_Audio/src/plugins/UridMap.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/plugins/UridMap.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_plugins.dir/src/plugins/UridMap.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/lsp-audio-player_autogen/mocs_compilation.cpp.o -c /home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/mocs_compilation.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/mocs_compilation.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/lsp-audio-player_autogen/mocs_compilation.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/main.cpp.o -c /home/egidf/Linux_Stage_Audio/src/main.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/main.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/MainWindow.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/MainWindow.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/MainWindow.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/MainWindow.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/PlayerPanel.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/PlayerPanel.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/PlayerPanel.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/PlayerPanel.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/RackView.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/RackView.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/RackView.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/RackView.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/RackCard.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/RackCard.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/RackCard.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/RackCard.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/PluginBrowser.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/PluginBrowser.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/PluginBrowser.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/PluginBrowser.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/PluginEditor.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/PluginEditor.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/PluginEditor.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/PluginEditor.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/SessionController.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/SessionController.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/SessionController.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/SessionController.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/widgets/Knob.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/widgets/Knob.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/widgets/Knob.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/widgets/Knob.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/widgets/Waveform.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/widgets/Waveform.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/widgets/Waveform.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/widgets/Waveform.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/widgets/Icons.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/widgets/Icons.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/widgets/Icons.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/widgets/Icons.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/widgets/AlbumArt.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/widgets/AlbumArt.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/widgets/AlbumArt.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/widgets/AlbumArt.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/widgets/LevelMeter.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/widgets/LevelMeter.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/widgets/LevelMeter.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/widgets/LevelMeter.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_WIDGETS_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lsp-audio-player_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtGui -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtWidgets -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lsp-audio-player.dir/src/ui/theme/Theme.cpp.o -c /home/egidf/Linux_Stage_Audio/src/ui/theme/Theme.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/src/ui/theme/Theme.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lsp-audio-player.dir/src/ui/theme/Theme.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lv2probe_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lv2probe.dir/lv2probe_autogen/mocs_compilation.cpp.o -c /home/egidf/Linux_Stage_Audio/build-asan/lv2probe_autogen/mocs_compilation.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/build-asan/lv2probe_autogen/mocs_compilation.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lv2probe.dir/lv2probe_autogen/mocs_compilation.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lv2probe_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lv2probe.dir/tools/lv2probe.cpp.o -c /home/egidf/Linux_Stage_Audio/tools/lv2probe.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/tools/lv2probe.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lv2probe.dir/tools/lv2probe.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_tests.dir/lspa_tests_autogen/mocs_compilation.cpp.o -c /home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/mocs_compilation.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/mocs_compilation.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_tests.dir/lspa_tests_autogen/mocs_compilation.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_tests.dir/tests/TestMain.cpp.o -c /home/egidf/Linux_Stage_Audio/tests/TestMain.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/tests/TestMain.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_tests.dir/tests/TestMain.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_tests.dir/tests/TestRingBuffer.cpp.o -c /home/egidf/Linux_Stage_Audio/tests/TestRingBuffer.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/tests/TestRingBuffer.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_tests.dir/tests/TestRingBuffer.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_tests.dir/tests/TestFade.cpp.o -c /home/egidf/Linux_Stage_Audio/tests/TestFade.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/tests/TestFade.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_tests.dir/tests/TestFade.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_tests.dir/tests/TestSession.cpp.o -c /home/egidf/Linux_Stage_Audio/tests/TestSession.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/tests/TestSession.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_tests.dir/tests/TestSession.cpp.o"
+},
+{
+  "directory": "/home/egidf/Linux_Stage_Audio/build-asan",
+  "command": "/usr/bin/c++ -DQT_CORE_LIB -I/home/egidf/Linux_Stage_Audio/build-asan/lspa_tests_autogen/include -I/home/egidf/Linux_Stage_Audio/src -isystem /home/egidf/Qt/6.8.3/gcc_64/include/QtCore -isystem /home/egidf/Qt/6.8.3/gcc_64/include -isystem /home/egidf/Qt/6.8.3/gcc_64/mkspecs/linux-g++ -fsanitize=address -fno-omit-frame-pointer -g -g -std=gnu++17 -fPIC -o CMakeFiles/lspa_tests.dir/tests/TestEngineRender.cpp.o -c /home/egidf/Linux_Stage_Audio/tests/TestEngineRender.cpp",
+  "file": "/home/egidf/Linux_Stage_Audio/tests/TestEngineRender.cpp",
+  "output": "/home/egidf/Linux_Stage_Audio/build-asan/CMakeFiles/lspa_tests.dir/tests/TestEngineRender.cpp.o"
+}
+]

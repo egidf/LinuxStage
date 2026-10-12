@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/egidf/Linux_Stage_Audio/build-asan/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

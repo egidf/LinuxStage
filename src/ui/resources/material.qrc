@@ -1,0 +1,18 @@
+<RCC>
+  <qresource prefix="/material">
+    <file alias="add.svg">material/add.svg</file>
+    <file alias="delete.svg">material/delete.svg</file>
+    <file alias="expand_more.svg">material/expand_more.svg</file>
+    <file alias="expand_more_g.svg">material/expand_more_g.svg</file>
+    <file alias="format_list_bulleted.svg">material/format_list_bulleted.svg</file>
+    <file alias="image.svg">material/image.svg</file>
+    <file alias="pause.svg">material/pause.svg</file>
+    <file alias="play_arrow.svg">material/play_arrow.svg</file>
+    <file alias="repeat.svg">material/repeat.svg</file>
+    <file alias="shuffle.svg">material/shuffle.svg</file>
+    <file alias="skip_next.svg">material/skip_next.svg</file>
+    <file alias="skip_previous.svg">material/skip_previous.svg</file>
+    <file alias="volume_off.svg">material/volume_off.svg</file>
+    <file alias="volume_up.svg">material/volume_up.svg</file>
+  </qresource>
+</RCC>
