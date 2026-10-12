@@ -220,8 +220,8 @@ void PlayerPanel::buildUi() {
     setAttribute(Qt::WA_StyledBackground, true);
 
     auto* root = new QVBoxLayout(this);
-    root->setContentsMargins(18, 12, 18, 12);
-    root->setSpacing(12);
+    root->setContentsMargins(17, 11, 17, 18);
+    root->setSpacing(18);
 
     // ---------------------------------------------------------------- header
     auto* header = new QHBoxLayout();
@@ -236,8 +236,8 @@ void PlayerPanel::buildUi() {
     header->addSpacing(6);
 
     titleLabel_ = new QLabel(isMain ? tr("Main Player") : tr("BGM Player"), this);
-    titleLabel_->setStyleSheet("font-size: 18px; font-weight: 700; color: #F2F5F8;");
-    titleLabel_->setFixedHeight(24);
+    titleLabel_->setStyleSheet("font-size: 19px; font-weight: 700; color: #F2F5F8;");
+    titleLabel_->setFixedHeight(26);
     header->addWidget(titleLabel_);
     header->addSpacing(14);
 
@@ -248,8 +248,8 @@ void PlayerPanel::buildUi() {
 
     statusLabel_ = new QLabel(tr("Stopped"), this);
     statusLabel_->setStyleSheet(
-        QString("color: %1; font-size: 13px;").arg(theme::kTextDim.name()));
-    statusLabel_->setFixedHeight(18);
+        QString("color: %1; font-size: 14px;").arg(theme::kTextDim.name()));
+    statusLabel_->setFixedHeight(20);
     header->addWidget(statusLabel_);
     header->addStretch(1);
 
@@ -312,7 +312,7 @@ void PlayerPanel::buildUi() {
 
     art_ = new AlbumArt(this);
     art_->setAccent(accent_);
-    art_->setFixedSize(174, 194);
+    art_->setFixedSize(180, 226);
     upper->addWidget(art_, 0, Qt::AlignTop);
 
     // middle column: metadata, waveform, transport. The mockup's centre
@@ -320,20 +320,20 @@ void PlayerPanel::buildUi() {
     // so the upper row can't grow past it (a bare layout lets Qt hand the
     // spare space to the child layouts and inflate the row).
     auto* midWrap = new QWidget(this);
-    midWrap->setFixedHeight(210);
+    midWrap->setFixedHeight(240);
     auto* midCol = new QVBoxLayout(midWrap);
     midCol->setSpacing(0);
     midCol->setContentsMargins(0, 0, 0, 0);
 
     trackTitle_ = new QLabel(tr("No track"), this);
-    trackTitle_->setStyleSheet("font-size: 19px; font-weight: 700; color: #FFFFFF;");
-    trackTitle_->setFixedHeight(24);
+    trackTitle_->setStyleSheet("font-size: 23px; font-weight: 700; color: #FFFFFF;");
+    trackTitle_->setFixedHeight(28);
     midCol->addWidget(trackTitle_);
 
     midCol->addSpacing(2);
     trackArtist_ = new QLabel(tr("-"), this);
-    trackArtist_->setStyleSheet("color: #E6EDF3; font-size: 14px;");
-    trackArtist_->setFixedHeight(18);
+    trackArtist_->setStyleSheet("color: #E6EDF3; font-size: 16px;");
+    trackArtist_->setFixedHeight(22);
     midCol->addWidget(trackArtist_);
 
     midCol->addSpacing(3);
@@ -345,8 +345,8 @@ void PlayerPanel::buildUi() {
     albumIcon->setFixedSize(17, 15);
     albumRow->addWidget(albumIcon);
     trackAlbum_ = new QLabel(tr("-"), this);
-    trackAlbum_->setStyleSheet("color: #C9D1D9; font-size: 12px;");
-    trackAlbum_->setFixedHeight(16);
+    trackAlbum_->setStyleSheet("color: #C9D1D9; font-size: 14px;");
+    trackAlbum_->setFixedHeight(20);
     albumRow->addWidget(trackAlbum_);
     albumRow->addStretch(1);
     midCol->addLayout(albumRow);
@@ -354,7 +354,7 @@ void PlayerPanel::buildUi() {
     midCol->addSpacing(6);
     waveform_ = new WaveformView(this);
     waveform_->setAccent(accent_);
-    waveform_->setFixedHeight(54);
+    waveform_->setFixedHeight(50);
     connect(waveform_, &WaveformView::seekRequested, this, &PlayerPanel::onSeek);
     midCol->addWidget(waveform_);
 
@@ -362,7 +362,7 @@ void PlayerPanel::buildUi() {
     timeRow->setContentsMargins(0, 0, 0, 0);
     posLabel_ = new QLabel(tr("00:00"), this);
     durLabel_ = new QLabel(tr("00:00"), this);
-    const QString timeStyle = QStringLiteral("color: #CDD3DB; font-size: 13px;");
+    const QString timeStyle = QStringLiteral("color: #CDD3DB; font-size: 15px;");
     posLabel_->setStyleSheet(timeStyle);
     durLabel_->setStyleSheet(timeStyle);
     posLabel_->setFixedHeight(15);
@@ -399,9 +399,9 @@ void PlayerPanel::buildUi() {
         return cell;
     };
 
-    midCol->addSpacing(8);
+    midCol->addSpacing(13);
     auto* transport = new QHBoxLayout();
-    transport->setSpacing(6);
+    transport->setSpacing(0);
     transport->setContentsMargins(0, 0, 0, 0);
 
     auto makeTool = [&](const char* matIcon, const QColor& color, const QString& tip,
@@ -486,7 +486,7 @@ void PlayerPanel::buildUi() {
     volumeSlider_->setValue(qRound(engine_->player(id_).volume() * 100.0f));
     // The default slider sizeHint is ~40px tall, which would inflate the
     // volume row; pin it to the mute button's height so the row stays 26px.
-    volumeSlider_->setFixedHeight(22);
+    volumeSlider_->setFixedHeight(26);
     volumeSlider_->setStyleSheet(
         QString("QSlider::groove:horizontal { height: 6px; background: %1; border-radius: 3px; }"
                 "QSlider::handle:horizontal { background: %2; width: 16px; margin: -5px 0;"
@@ -537,6 +537,7 @@ void PlayerPanel::buildUi() {
     playlist_->setSelectionMode(QAbstractItemView::ExtendedSelection);
     playlist_->setContextMenuPolicy(Qt::CustomContextMenu);
     playlist_->setFixedWidth(280);
+    playlist_->setFixedHeight(196);
     // Mockup: rows sit directly on the panel; the current row paints its own
     // rounded highlight, other rows a hair separator - no frame or well.
     playlist_->setStyleSheet(
