@@ -450,20 +450,40 @@ void PlayerPanel::buildUi() {
         const PlayerSnapshot snap = p.snapshot();
         if (snap.state == PlayerState::Playing) {
             p.pause();
-            // Main player pause -> unmute BGM
             if (id_ == PlayerId::Main) {
+                // Main pauses -> unmute BGM, restore normal priority
                 engine_->player(PlayerId::Bgm).setMuted(false);
+                bgmControlsFrozen_ = false;
+            } else if (id_ == PlayerId::Bgm) {
+                // BGM pauses while Main was muted (BGM had stolen focus)
+                // Freeze BGM controls: audio continues, seek/position frozen, Main stays muted
+                if (bgmControlsFrozen_) {
+                    // Already frozen - this is a pause of already frozen BGM
+                    // Keep Main muted, BGM audio continues, seek frozen
+                } else {
+                    // BGM pauses while it had stolen focus from Main
+                    // Freeze BGM controls: audio continues, seek/position frozen
+                    bgmControlsFrozen_ = true;
+                    // Main stays muted (don't unmute)
+                }
             }
         } else {
             p.play();
-            // Main player play -> mute BGM
             if (id_ == PlayerId::Main) {
+                // Main plays -> mute BGM, restore normal priority
                 engine_->player(PlayerId::Bgm).setMuted(true);
+                bgmControlsFrozen_ = false;
             } else if (id_ == PlayerId::Bgm) {
-                // BGM play attempt while Main is playing -> mute BGM
+                // BGM play attempt
                 const auto mainSnap = engine_->player(PlayerId::Main).snapshot();
                 if (mainSnap.state == PlayerState::Playing) {
-                    engine_->player(PlayerId::Bgm).setMuted(true);
+                    // Main is playing -> BGM steals focus, Main muted
+                    engine_->player(PlayerId::Main).setMuted(true);
+                    bgmControlsFrozen_ = false;  // BGM has active control
+                } else {
+                    // Main not playing -> normal BGM play
+                    engine_->player(PlayerId::Main).setMuted(false);
+                    bgmControlsFrozen_ = false;
                 }
             }
         }
@@ -644,6 +664,10 @@ void PlayerPanel::onPlaylistActivated(QListWidgetItem* item) {
 }
 
 void PlayerPanel::onSeek(double fraction) {
+    if (id_ == PlayerId::Bgm && bgmControlsFrozen_) {
+        // BGM controls frozen - seek blocked, audio continues
+        return;
+    }
     Player& p = engine_->player(id_);
     const PlayerSnapshot snap = p.snapshot();
     if (snap.totalFrames <= 0) return;
@@ -888,6 +912,10 @@ void PlayerPanel::refreshNow() {
 }
 
 void PlayerPanel::updateMetadata(const PlayerSnapshot& snap) {
+    if (id_ == PlayerId::Bgm && bgmControlsFrozen_) {
+        // BGM controls frozen - don't update position/seek display, audio continues
+        return;
+    }
     posLabel_->setText(formatTimePadded(snap.positionSec));
     durLabel_->setText(formatTimePadded(snap.durationSec));
     const double frac = snap.durationSec > 0 ? snap.positionSec / snap.durationSec : 0.0;

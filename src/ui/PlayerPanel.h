@@ -107,6 +107,9 @@ private:
     QLabel* playlistHeader_ = nullptr;
     QListWidget* playlist_ = nullptr;
 
+    // ducking/priority state
+    bool bgmControlsFrozen_ = false;  // BGM controls frozen (seek/position frozen but audio continues)
+
     // waveform peaks worker
     std::atomic<uint64_t> peaksJobId_{0};
     std::thread normalizeWorker_;
